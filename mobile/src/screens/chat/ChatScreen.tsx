@@ -1,0 +1,144 @@
+import React, { useEffect, useRef, useCallback } from 'react';
+import { View, FlatList, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { colors } from '../../theme/colors';
+import { useChatStore } from '../../store/chatStore';
+import { ChatWebSocket } from '../../services/chat';
+import { createConversation } from '../../services/family';
+import MessageBubble from '../../components/chat/MessageBubble';
+import ChatInput from '../../components/chat/ChatInput';
+import TypingIndicator from '../../components/chat/TypingIndicator';
+import QuizOptions from '../../components/chat/QuizOptions';
+import type { ChatMessage } from '../../types/chat';
+import type { WSEvent } from '../../types/chat';
+
+export default function ChatScreen() {
+  const wsRef = useRef<ChatWebSocket | null>(null);
+  const flatListRef = useRef<FlatList>(null);
+  const conversationIdRef = useRef<string | null>(null);
+
+  const {
+    messages,
+    isStreaming,
+    currentStreamText,
+    activeQuiz,
+    addUserMessage,
+    startStream,
+    appendStreamChunk,
+    endStream,
+    setQuizOptions,
+    clearQuiz,
+  } = useChatStore();
+
+  const handleWSEvent = useCallback((event: WSEvent) => {
+    switch (event.type) {
+      case 'connected':
+        break;
+      case 'stream_start':
+        startStream();
+        break;
+      case 'stream_chunk':
+        if (event.content) appendStreamChunk(event.content);
+        break;
+      case 'stream_end':
+        endStream();
+        break;
+      case 'quiz_options':
+        if (event.question && event.options) {
+          setQuizOptions({
+            question: event.question,
+            options: event.options,
+            allowMultiple: event.allow_multiple || false,
+          });
+        }
+        break;
+      case 'error':
+        endStream();
+        break;
+    }
+  }, [startStream, appendStreamChunk, endStream, setQuizOptions]);
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const conv = await createConversation('New Chat');
+        conversationIdRef.current = conv.id;
+        const ws = new ChatWebSocket(conv.id, handleWSEvent);
+        wsRef.current = ws;
+        ws.connect();
+      } catch (e) {
+        console.error('Failed to create conversation:', e);
+      }
+    };
+
+    init();
+
+    return () => {
+      wsRef.current?.disconnect();
+    };
+  }, [handleWSEvent]);
+
+  const handleSend = (text: string) => {
+    addUserMessage(text);
+    clearQuiz();
+    wsRef.current?.sendMessage(text);
+  };
+
+  const handleQuizSelect = (optionId: string, label: string) => {
+    addUserMessage(label);
+    clearQuiz();
+    wsRef.current?.sendQuizResponse(optionId, label);
+  };
+
+  const renderItem = ({ item }: { item: ChatMessage }) => (
+    <MessageBubble message={item} />
+  );
+
+  // Build display list: messages + streaming text
+  const displayMessages = [...messages];
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={90}
+    >
+      <FlatList
+        ref={flatListRef}
+        data={displayMessages}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.messageList}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        ListFooterComponent={
+          <>
+            {isStreaming && currentStreamText ? (
+              <MessageBubble
+                message={{
+                  id: 'streaming',
+                  role: 'assistant',
+                  content: currentStreamText,
+                  timestamp: new Date(),
+                }}
+              />
+            ) : null}
+            {isStreaming && !currentStreamText ? <TypingIndicator /> : null}
+            {activeQuiz ? (
+              <QuizOptions quiz={activeQuiz} onSelect={handleQuizSelect} />
+            ) : null}
+          </>
+        }
+      />
+      <ChatInput onSend={handleSend} disabled={isStreaming} />
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  messageList: {
+    paddingVertical: 16,
+  },
+});
