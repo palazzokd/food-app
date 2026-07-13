@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from pydantic import BaseModel, EmailStr
 
@@ -24,5 +25,8 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     email: str
     display_name: str | None
+    plan: str = "trial"
+    plan_status: str = "active"
+    trial_ends_at: datetime | None = None
 
     model_config = {"from_attributes": True}

@@ -1,5 +1,17 @@
+from datetime import date, timedelta
+
 from app.models.chat import LearnedPreference
 from app.models.family import FamilyProfile, HouseholdMember
+
+
+def _build_date_context() -> str:
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    return (
+        f"TODAY: {today.strftime('%A, %B %d, %Y')} ({today.isoformat()}). "
+        f"This week's Monday is {monday.isoformat()} — use it as week_start_date "
+        f"when saving meal plans for 'this week'."
+    )
 
 
 def build_system_prompt(
@@ -15,11 +27,14 @@ def build_system_prompt(
         parts.append(_build_preferences_context(learned_preferences))
 
     parts.append(BEHAVIORAL_RULES)
+    parts.append(_build_date_context())
     return "\n\n".join(parts)
 
 
 def build_onboarding_prompt() -> str:
-    return "\n\n".join([BASE_PROMPT, ONBOARDING_PROMPT, BEHAVIORAL_RULES])
+    return "\n\n".join(
+        [BASE_PROMPT, ONBOARDING_PROMPT, BEHAVIORAL_RULES, _build_date_context()]
+    )
 
 
 BASE_PROMPT = """You are FamilyPlate, a warm and knowledgeable family meal planning assistant. \
@@ -55,11 +70,33 @@ render tappable buttons instead of requiring the user to type
 - Always consider ALL family members' needs simultaneously when planning meals
 - For toddlers (palate_expansion stage): suggest age-appropriate adaptations for every recipe
 - For infants (allergen_introduction stage): follow pediatric guidelines, suggest safe textures
-- Enforce the 30-minute prep constraint unless the user explicitly asks for longer recipes
-- Plan in 4-day cycles: 2 dinners, each serving 2 nights, with night-2 refresh suggestions
+- Enforce the family's max prep constraint unless the user explicitly asks for longer recipes
+- Plan around the family's cycle (e.g. 2 dinners, each serving 2 nights, with night-2 refresh)
 - Be seasonal — suggest meals appropriate for the current time of year
 - When you learn a new preference, use the save_preference tool to persist it
-- Keep responses concise for mobile reading — avoid walls of text"""
+- Keep responses concise for mobile reading — avoid walls of text
+
+RECIPES:
+- Be creative and varied with recipe ideas, but precise with quantities and steps
+- When the family wants to keep a recipe, save it with save_recipe — include ingredients \
+with quantities, ordered steps, toddler/infant adaptations, night-2 refresh notes, and \
+tag which nutrition targets it hits (legumes, leafy_greens, nuts_seeds)
+- Check get_recipes before inventing something new — reuse and riff on saved favorites
+
+MEAL PLANNING:
+- Before planning a week, call get_recipes (favorites first) and get_meal_plan
+- Save finished plans with save_meal_plan, linking recipe_id for saved recipes
+- Note which nutrition targets each day hits; after saving a plan, log the expected \
+targets with log_nutrition for each planned day
+- Aim for every day to hit legumes + leafy greens + nuts/seeds ("consistency beats perfection")
+
+GROCERY LISTS:
+- Build lists from the meal plan (get_meal_plan) plus household staples
+- Group items by store using the family's store memberships and flag known deals \
+(e.g. Whole Foods Tuesday deals) in deal_note; add a strategy_note with the best shopping order
+- Be exact and complete — every recipe ingredient the family doesn't already stock
+- For small changes ("add lemons"), use get_grocery_list then update_grocery_items — \
+do not regenerate the whole list"""
 
 
 def _build_family_context(profile: FamilyProfile) -> str:

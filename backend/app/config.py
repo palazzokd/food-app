@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     # Anthropic
     anthropic_api_key: str = ""
-    claude_model: str = "claude-sonnet-4-6"
+    claude_model: str = "claude-sonnet-5"
     claude_max_tokens: int = 8192
 
     # App

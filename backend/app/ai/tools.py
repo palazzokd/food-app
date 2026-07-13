@@ -109,4 +109,230 @@ TOOL_DEFINITIONS = [
             "properties": {},
         },
     },
+    {
+        "name": "save_recipe",
+        "description": (
+            "Save a recipe to the family's recipe library. Use this whenever you "
+            "create or refine a recipe the family wants to keep, and when they ask "
+            "you to remember a family favorite. Include toddler/infant adaptations "
+            "when the household has young children."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string"},
+                "category": {
+                    "type": "string",
+                    "enum": ["breakfast", "lunch", "dinner", "snack"],
+                },
+                "cuisine": {"type": "string", "description": "e.g. Mediterranean, Mexican, Thai"},
+                "protein": {"type": "string", "description": "Primary protein, e.g. Chicken, Shrimp, Tofu"},
+                "season": {"type": "string", "description": "e.g. Summer, Winter, All"},
+                "total_minutes": {"type": "integer"},
+                "active_minutes": {
+                    "type": "integer",
+                    "description": "Active prep/cook time — must respect the family's max prep constraint",
+                },
+                "nutrition_tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": ["legumes", "leafy_greens", "nuts_seeds"],
+                    },
+                    "description": "Which of the family's daily nutrition targets this recipe hits",
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "item": {"type": "string"},
+                            "quantity": {"type": "string"},
+                            "store_hint": {"type": "string", "description": "Best store to buy this at, if known"},
+                        },
+                        "required": ["item"],
+                    },
+                },
+                "instructions": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Ordered preparation steps",
+                },
+                "toddler_notes": {"type": "string", "description": "How to adapt for a toddler"},
+                "infant_notes": {"type": "string", "description": "Finger-food adaptation for an infant"},
+                "night2_notes": {"type": "string", "description": "How to refresh leftovers for night 2"},
+                "is_favorite": {"type": "boolean"},
+            },
+            "required": ["title", "category", "ingredients", "instructions"],
+        },
+    },
+    {
+        "name": "get_recipes",
+        "description": (
+            "Search the family's saved recipe library. Use this before planning meals "
+            "so you can reuse favorites, and to answer questions about saved recipes."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": ["breakfast", "lunch", "dinner", "snack"],
+                },
+                "favorites_only": {"type": "boolean"},
+                "search": {"type": "string", "description": "Match against recipe titles"},
+            },
+        },
+    },
+    {
+        "name": "save_meal_plan",
+        "description": (
+            "Save a weekly meal plan. Replaces any existing plan for the same week. "
+            "Reference saved recipes by recipe_id where they exist (use get_recipes "
+            "to look up IDs). day_of_week: 0=Monday through 6=Sunday."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "week_start_date": {
+                    "type": "string",
+                    "description": "The Monday of the week, YYYY-MM-DD",
+                },
+                "title": {"type": "string", "description": "e.g. 'Week of July 13'"},
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "day_of_week": {"type": "integer", "minimum": 0, "maximum": 6},
+                            "meal_type": {
+                                "type": "string",
+                                "enum": ["breakfast", "lunch", "dinner", "snack"],
+                            },
+                            "title": {"type": "string", "description": "Display text, e.g. 'Shrimp Tacos (night 2)'"},
+                            "recipe_id": {"type": "string", "description": "UUID of a saved recipe, if one exists"},
+                            "notes": {"type": "string"},
+                        },
+                        "required": ["day_of_week", "meal_type", "title"],
+                    },
+                },
+            },
+            "required": ["week_start_date", "entries"],
+        },
+    },
+    {
+        "name": "get_meal_plan",
+        "description": "Get the current week's meal plan (or a specific week's). Use before modifying a plan or building a grocery list.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "week_start_date": {
+                    "type": "string",
+                    "description": "The Monday of the week, YYYY-MM-DD. Omit for the current week.",
+                },
+            },
+        },
+    },
+    {
+        "name": "save_grocery_list",
+        "description": (
+            "Save a new grocery list, replacing the currently active one. Group items "
+            "by store based on the family's store memberships and flag known deals."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string", "description": "e.g. 'Week of July 13'"},
+                "strategy_note": {
+                    "type": "string",
+                    "description": "Shopping strategy tip, e.g. which day to hit which store for deals",
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "quantity": {"type": "string"},
+                            "store": {"type": "string", "description": "Store to buy at, e.g. 'Whole Foods'"},
+                            "deal_note": {"type": "string", "description": "e.g. 'BOGO 50%', '$2 off Tuesday'"},
+                        },
+                        "required": ["name"],
+                    },
+                },
+            },
+            "required": ["items"],
+        },
+    },
+    {
+        "name": "get_grocery_list",
+        "description": "Get the family's current active grocery list with item IDs. Use before adding, removing, or checking off items.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+        },
+    },
+    {
+        "name": "update_grocery_items",
+        "description": (
+            "Modify the active grocery list: add new items, remove items, or "
+            "check/uncheck items. Match existing items by their name as shown in "
+            "get_grocery_list."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "add": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "quantity": {"type": "string"},
+                            "store": {"type": "string"},
+                            "deal_note": {"type": "string"},
+                        },
+                        "required": ["name"],
+                    },
+                },
+                "remove": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Names of items to remove",
+                },
+                "check": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Names of items to mark as purchased",
+                },
+                "uncheck": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Names of items to un-mark",
+                },
+            },
+        },
+    },
+    {
+        "name": "log_nutrition",
+        "description": (
+            "Record which nutrition targets (legumes, leafy greens, nuts/seeds) the "
+            "family hit on a given date. Use when meals are planned or when the "
+            "family reports what they ate."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "date": {"type": "string", "description": "YYYY-MM-DD"},
+                "legumes": {"type": "boolean"},
+                "leafy_greens": {"type": "boolean"},
+                "nuts_seeds": {"type": "boolean"},
+                "source_note": {
+                    "type": "string",
+                    "description": "Where the targets came from, e.g. 'Black beans (tacos) · Spinach (lunch)'",
+                },
+            },
+            "required": ["date"],
+        },
+    },
 ]

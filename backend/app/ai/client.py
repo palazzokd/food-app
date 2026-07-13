@@ -1,12 +1,12 @@
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic
 
 from app.config import settings
 
-_client: Anthropic | None = None
+_client: AsyncAnthropic | None = None
 
 
-def get_anthropic_client() -> Anthropic:
+def get_anthropic_client() -> AsyncAnthropic:
     global _client
     if _client is None:
-        _client = Anthropic(api_key=settings.anthropic_api_key)
+        _client = AsyncAnthropic(api_key=settings.anthropic_api_key)
     return _client

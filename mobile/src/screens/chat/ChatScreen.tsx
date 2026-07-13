@@ -2,16 +2,18 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import { View, FlatList, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { colors } from '../../theme/colors';
 import { useChatStore } from '../../store/chatStore';
+import { useDataStore } from '../../store/dataStore';
 import { ChatWebSocket } from '../../services/chat';
 import { createConversation } from '../../services/family';
 import MessageBubble from '../../components/chat/MessageBubble';
 import ChatInput from '../../components/chat/ChatInput';
 import TypingIndicator from '../../components/chat/TypingIndicator';
 import QuizOptions from '../../components/chat/QuizOptions';
-import type { ChatMessage } from '../../types/chat';
+import SavedContentCard from '../../components/chat/SavedContentCard';
+import type { ChatMessage, SavedContentInfo } from '../../types/chat';
 import type { WSEvent } from '../../types/chat';
 
-export default function ChatScreen() {
+export default function ChatScreen({ navigation }: any) {
   const wsRef = useRef<ChatWebSocket | null>(null);
   const flatListRef = useRef<FlatList>(null);
   const conversationIdRef = useRef<string | null>(null);
@@ -22,6 +24,7 @@ export default function ChatScreen() {
     currentStreamText,
     activeQuiz,
     addUserMessage,
+    addSavedContentCard,
     startStream,
     appendStreamChunk,
     endStream,
@@ -51,11 +54,55 @@ export default function ChatScreen() {
           });
         }
         break;
+      case 'content_saved': {
+        const contentType = event.content_type as SavedContentInfo['contentType'];
+        addSavedContentCard({
+          contentType,
+          title: event.data?.title,
+          recipeId: event.data?.recipe_id,
+        });
+        // Refetch the affected module so tabs are fresh when the user switches
+        const data = useDataStore.getState();
+        if (contentType === 'recipe_saved') data.loadRecipes();
+        else if (contentType === 'meal_plan_saved') data.loadMealPlan();
+        else if (contentType === 'grocery_list_saved') data.loadGroceryList();
+        else if (contentType === 'nutrition_logged') data.loadNutrition();
+        data.loadDashboard();
+        break;
+      }
       case 'error':
         endStream();
         break;
     }
-  }, [startStream, appendStreamChunk, endStream, setQuizOptions]);
+  }, [startStream, appendStreamChunk, endStream, setQuizOptions, addSavedContentCard]);
+
+  const handleCardPress = useCallback(
+    (info: SavedContentInfo) => {
+      switch (info.contentType) {
+        case 'recipe_saved':
+          if (info.recipeId) {
+            navigation.navigate('Recipes', {
+              screen: 'RecipeDetail',
+              params: { recipeId: info.recipeId },
+              initial: false,
+            });
+          } else {
+            navigation.navigate('Recipes');
+          }
+          break;
+        case 'meal_plan_saved':
+          navigation.navigate('Meals');
+          break;
+        case 'grocery_list_saved':
+          navigation.navigate('Grocery');
+          break;
+        case 'nutrition_logged':
+          navigation.navigate('Home', { screen: 'Nutrition', initial: false });
+          break;
+      }
+    },
+    [navigation]
+  );
 
   useEffect(() => {
     const init = async () => {
@@ -89,9 +136,12 @@ export default function ChatScreen() {
     wsRef.current?.sendQuizResponse(optionId, label);
   };
 
-  const renderItem = ({ item }: { item: ChatMessage }) => (
-    <MessageBubble message={item} />
-  );
+  const renderItem = ({ item }: { item: ChatMessage }) =>
+    item.savedContent ? (
+      <SavedContentCard info={item.savedContent} onPress={() => handleCardPress(item.savedContent!)} />
+    ) : (
+      <MessageBubble message={item} />
+    );
 
   // Build display list: messages + streaming text
   const displayMessages = [...messages];

@@ -1,9 +1,16 @@
+export interface SavedContentInfo {
+  contentType: 'recipe_saved' | 'meal_plan_saved' | 'grocery_list_saved' | 'nutrition_logged';
+  title?: string;
+  recipeId?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
   quizOptions?: QuizOptions;
+  savedContent?: SavedContentInfo;
 }
 
 export interface QuizOption {
@@ -25,7 +32,15 @@ export interface WSMessage {
 }
 
 export interface WSEvent {
-  type: 'connected' | 'stream_start' | 'stream_chunk' | 'stream_end' | 'quiz_options' | 'tool_status' | 'error';
+  type:
+    | 'connected'
+    | 'stream_start'
+    | 'stream_chunk'
+    | 'stream_end'
+    | 'quiz_options'
+    | 'tool_status'
+    | 'content_saved'
+    | 'error';
   content?: string;
   message?: string;
   conversation_id?: string;
@@ -34,4 +49,6 @@ export interface WSEvent {
   allow_multiple?: boolean;
   tool?: string;
   status?: string;
+  content_type?: string;
+  data?: Record<string, any>;
 }

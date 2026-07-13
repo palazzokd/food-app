@@ -41,3 +41,99 @@ export interface ConversationResponse {
   is_active: boolean;
   created_at: string;
 }
+
+export type MealTypeValue = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
+export interface Ingredient {
+  item: string;
+  quantity: string | null;
+  store_hint: string | null;
+}
+
+export interface RecipeSummary {
+  id: string;
+  title: string;
+  category: MealTypeValue;
+  cuisine: string | null;
+  protein: string | null;
+  season: string | null;
+  total_minutes: number | null;
+  rating: number | null;
+  is_favorite: boolean;
+  nutrition_tags: string[];
+  created_at: string;
+}
+
+export interface RecipeDetail extends RecipeSummary {
+  active_minutes: number | null;
+  ingredients: Ingredient[];
+  instructions: string[];
+  toddler_notes: string | null;
+  infant_notes: string | null;
+  night2_notes: string | null;
+  source: 'ai' | 'manual';
+}
+
+export interface MealPlanEntry {
+  id: string;
+  day_of_week: number;
+  meal_type: MealTypeValue;
+  recipe_id: string | null;
+  title: string;
+  notes: string | null;
+}
+
+export interface MealPlan {
+  id: string;
+  week_start_date: string;
+  title: string | null;
+  is_active: boolean;
+  entries: MealPlanEntry[];
+  created_at: string;
+}
+
+export interface GroceryItem {
+  id: string;
+  name: string;
+  quantity: string | null;
+  store: string | null;
+  deal_note: string | null;
+  is_checked: boolean;
+  sort_order: number;
+}
+
+export interface GroceryList {
+  id: string;
+  meal_plan_id: string | null;
+  title: string | null;
+  strategy_note: string | null;
+  is_active: boolean;
+  items: GroceryItem[];
+  created_at: string;
+}
+
+export interface NutritionDay {
+  id: string;
+  date: string;
+  legumes: boolean;
+  leafy_greens: boolean;
+  nuts_seeds: boolean;
+  source_note: string | null;
+}
+
+export interface NutritionWeek {
+  week_start: string;
+  days: NutritionDay[];
+  targets_hit: number;
+  targets_possible: number;
+}
+
+export interface Dashboard {
+  recipe_count: number;
+  favorite_count: number;
+  meal_plan: MealPlan | null;
+  grocery_list: GroceryList | null;
+  nutrition: NutritionWeek & { week_start: string };
+  plan: string;
+  trial_days_left: number | null;
+}

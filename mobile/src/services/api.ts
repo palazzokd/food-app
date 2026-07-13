@@ -1,5 +1,7 @@
-const API_BASE_URL = __DEV__
-  ? 'http://localhost:8000'
+import { Platform } from 'react-native';
+
+export const API_BASE_URL = __DEV__
+  ? 'http://192.168.86.56:8000'
   : 'https://api.familyplate.app'; // Update for production
 
 let accessToken: string | null = null;

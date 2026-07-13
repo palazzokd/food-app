@@ -52,17 +52,16 @@ async def process_message(
         api_messages.append({"role": "user", "content": user_message})
 
     client = get_anthropic_client()
-    max_tool_rounds = 5
+    max_tool_rounds = 10
 
     for _ in range(max_tool_rounds):
         # Call Claude
-        response = client.messages.create(
+        response = await client.messages.create(
             model=settings.claude_model,
             max_tokens=settings.claude_max_tokens,
             system=system_prompt,
             messages=api_messages,
             tools=TOOL_DEFINITIONS,
-            temperature=_detect_temperature(user_message),
         )
 
         # Process response content blocks
@@ -114,6 +113,19 @@ async def process_message(
                         "options": result["options"],
                         "allow_multiple": result.get("allow_multiple", False),
                     }
+                elif result.get("type") in (
+                    "recipe_saved",
+                    "meal_plan_saved",
+                    "grocery_list_saved",
+                    "nutrition_logged",
+                ):
+                    # Tell the mobile app content was saved so it can refetch
+                    # and render an inline card in the chat
+                    yield {
+                        "type": "content_saved",
+                        "content_type": result["type"],
+                        "data": result,
+                    }
 
                 tool_results.append({
                     "type": "tool_result",
@@ -143,15 +155,3 @@ async def process_message(
 
     # If we exhausted tool rounds, end gracefully
     yield {"type": "stream_end"}
-
-
-def _detect_temperature(message: str) -> float:
-    message_lower = message.lower()
-    recipe_keywords = ["recipe", "cook", "make", "dish", "meal", "dinner", "lunch", "breakfast"]
-    grocery_keywords = ["grocery", "shopping", "list", "store", "buy", "ingredients"]
-
-    if any(kw in message_lower for kw in grocery_keywords):
-        return 0.3
-    if any(kw in message_lower for kw in recipe_keywords):
-        return 0.7
-    return 0.5

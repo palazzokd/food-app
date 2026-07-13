@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ChatMessage, QuizOptions } from '../types/chat';
+import type { ChatMessage, QuizOptions, SavedContentInfo } from '../types/chat';
 
 interface ChatState {
   messages: ChatMessage[];
@@ -8,6 +8,7 @@ interface ChatState {
   activeQuiz: QuizOptions | null;
 
   addUserMessage: (content: string) => void;
+  addSavedContentCard: (info: SavedContentInfo) => void;
   startStream: () => void;
   appendStreamChunk: (chunk: string) => void;
   endStream: () => void;
@@ -32,6 +33,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
       timestamp: new Date(),
     };
     set((state) => ({ messages: [...state.messages, msg] }));
+  },
+
+  addSavedContentCard: (info) => {
+    const state = get();
+    // Flush any streamed text so the card lands in reading order
+    if (state.currentStreamText) {
+      const msg: ChatMessage = {
+        id: `ai-${++messageCounter}`,
+        role: 'assistant',
+        content: state.currentStreamText,
+        timestamp: new Date(),
+      };
+      set((s) => ({ messages: [...s.messages, msg], currentStreamText: '' }));
+    }
+    const card: ChatMessage = {
+      id: `saved-${++messageCounter}`,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      savedContent: info,
+    };
+    set((s) => ({ messages: [...s.messages, card] }));
   },
 
   startStream: () => {

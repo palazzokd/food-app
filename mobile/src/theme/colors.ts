@@ -1,34 +1,48 @@
+// Design tokens from the FamilyPlate prototype
 export const colors = {
-  // Primary palette (from spec: forest green, sage, warm amber)
-  primary: '#2D5016',       // Forest green
-  primaryLight: '#7A9E6B',  // Sage
+  // Prototype palette
+  forest: '#2D5016',
+  sage: '#7A9E5A',
+  moss: '#4A7A28',
+  cream: '#FAF8F3',
+  warm: '#E8A850',
+  amber: '#C4863A',
+  charcoal: '#2C2C2C',
+  mist: '#F0EDE6',
+  white: '#FFFFFF',
+  red: '#C0392B',
+  blue: '#2980B9',
+
+  // Semantic aliases (used across existing screens)
+  primary: '#2D5016',
+  primaryLight: '#7A9E5A',
   primaryDark: '#1A3009',
-  accent: '#D4920B',        // Warm amber
+  accent: '#E8A850',
   accentLight: '#F5D590',
 
   // Backgrounds
-  background: '#FAFAF5',
+  background: '#FAF8F3',
   surface: '#FFFFFF',
-  surfaceSecondary: '#F0F0EA',
+  surfaceSecondary: '#F0EDE6',
 
   // Text
-  text: '#1A1A1A',
-  textSecondary: '#6B6B6B',
+  text: '#2C2C2C',
+  textSecondary: '#888888',
   textInverse: '#FFFFFF',
 
   // Chat
   userBubble: '#2D5016',
   userBubbleText: '#FFFFFF',
-  aiBubble: '#F0F0EA',
-  aiBubbleText: '#1A1A1A',
+  aiBubble: '#FFFFFF',
+  aiBubbleText: '#2C2C2C',
 
   // Status
-  error: '#DC3545',
-  success: '#28A745',
-  warning: '#FFC107',
+  error: '#C0392B',
+  success: '#4A7A28',
+  warning: '#E8A850',
 
   // UI
-  border: '#E0E0D8',
-  divider: '#E8E8E0',
+  border: '#EDE9E0',
+  divider: '#F0EDE6',
   placeholder: '#A0A0A0',
 };

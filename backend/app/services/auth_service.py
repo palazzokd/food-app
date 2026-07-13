@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +17,10 @@ async def register_user(
     db: AsyncSession, email: str, password: str, display_name: str | None = None
 ) -> dict:
     supabase = get_supabase_client()
-    auth_response = supabase.auth.sign_up({"email": email, "password": password})
+    try:
+        auth_response = supabase.auth.sign_up({"email": email, "password": password})
+    except Exception as e:
+        raise ValueError(str(e))
 
     if not auth_response.user:
         raise ValueError("Registration failed")
@@ -25,6 +29,7 @@ async def register_user(
         supabase_auth_id=uuid.UUID(auth_response.user.id),
         email=email,
         display_name=display_name,
+        trial_ends_at=datetime.now(timezone.utc) + timedelta(days=21),
     )
     db.add(user)
     await db.commit()
