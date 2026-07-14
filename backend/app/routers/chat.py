@@ -79,9 +79,11 @@ async def websocket_chat(
         await websocket.close()
         return
 
+    user_id = user.id
+
     # Verify conversation belongs to user
     conversation = await chat_service.get_conversation(db, conversation_id)
-    if not conversation or conversation.user_id != user.id:
+    if not conversation or conversation.user_id != user_id:
         await websocket.send_json({"type": "error", "message": "Conversation not found"})
         await websocket.close()
         return
@@ -89,7 +91,7 @@ async def websocket_chat(
     await websocket.send_json({"type": "connected", "conversation_id": str(conversation_id)})
 
     # Check if this is an onboarding conversation
-    profile = await family_service.get_family_profile(db, user.id)
+    profile = await family_service.get_family_profile(db, user_id)
     is_onboarding = profile is None or not profile.members
 
     try:
@@ -106,16 +108,21 @@ async def websocket_chat(
 
                 from app.ai.orchestrator import process_message
 
-                # Refresh conversation to get latest messages
+                # The session lives for the whole socket with expire_on_commit=False,
+                # so cached objects (message history, profile members) go stale after
+                # commits. Expire everything so this turn reloads fresh state.
+                db.expire_all()
                 conversation = await chat_service.get_conversation(db, conversation_id)
 
                 async for event in process_message(
-                    content, conversation, db, user.id, is_onboarding=is_onboarding
+                    content, conversation, db, user_id, is_onboarding=is_onboarding
                 ):
                     await websocket.send_json(event)
 
-                # Recheck onboarding status after processing
-                profile = await family_service.get_family_profile(db, user.id)
+                # Recheck onboarding status after processing (tools may have just
+                # saved members — expire again so we see them)
+                db.expire_all()
+                profile = await family_service.get_family_profile(db, user_id)
                 is_onboarding = profile is None or not profile.members
 
             elif msg_type == "quiz_response":
@@ -126,12 +133,17 @@ async def websocket_chat(
 
                     from app.ai.orchestrator import process_message
 
+                    db.expire_all()
                     conversation = await chat_service.get_conversation(db, conversation_id)
 
                     async for event in process_message(
-                        selected, conversation, db, user.id, is_onboarding=is_onboarding
+                        selected, conversation, db, user_id, is_onboarding=is_onboarding
                     ):
                         await websocket.send_json(event)
+
+                    db.expire_all()
+                    profile = await family_service.get_family_profile(db, user_id)
+                    is_onboarding = profile is None or not profile.members
 
     except WebSocketDisconnect:
         pass

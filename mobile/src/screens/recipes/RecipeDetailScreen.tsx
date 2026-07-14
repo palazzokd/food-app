@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { Card, CardTitle, Tag } from '../../components/ui';
 import { fetchRecipe } from '../../services/modules';
@@ -76,13 +77,19 @@ export default function RecipeDetailScreen({ route }: any) {
 
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionBtn} onPress={onToggleFavorite}>
+          <Ionicons
+            name={recipe.is_favorite ? 'heart' : 'heart-outline'}
+            size={15}
+            color={recipe.is_favorite ? colors.warm : colors.forest}
+          />
           <Text style={styles.actionText}>
-            {recipe.is_favorite ? '♥ Favorited' : '♡ Favorite'}
+            {recipe.is_favorite ? 'Favorited' : 'Favorite'}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionBtnPrimary} onPress={sharePdf} disabled={sharing}>
+          <Ionicons name="share-outline" size={15} color={colors.white} />
           <Text style={styles.actionTextPrimary}>
-            {sharing ? 'Preparing…' : '📄 Share PDF'}
+            {sharing ? 'Preparing…' : 'Share PDF'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -174,6 +181,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 10,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
   },
   actionText: {
     color: colors.forest,
@@ -186,6 +196,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 10,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
   },
   actionTextPrimary: {
     color: colors.white,

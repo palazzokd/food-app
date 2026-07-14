@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { EmptyState, Tag } from '../../components/ui';
 import { useDataStore } from '../../store/dataStore';
@@ -40,14 +41,16 @@ export default function RecipeLibraryScreen({ navigation }: any) {
       onPress={() => navigation.navigate('RecipeDetail', { recipeId: item.id })}
     >
       <View style={styles.recipeHeader}>
-        <Text style={styles.recipeTitle}>
-          {item.title} {item.is_favorite ? '⭐' : ''}
-        </Text>
+        <Text style={styles.recipeTitle}>{item.title}</Text>
         <TouchableOpacity
           onPress={() => toggleRecipeFavorite(item.id, !item.is_favorite)}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Text style={styles.favToggle}>{item.is_favorite ? '♥' : '♡'}</Text>
+          <Ionicons
+            name={item.is_favorite ? 'heart' : 'heart-outline'}
+            size={20}
+            color={item.is_favorite ? colors.warm : colors.textSecondary}
+          />
         </TouchableOpacity>
       </View>
       <Text style={styles.recipeMeta}>
@@ -167,10 +170,6 @@ const styles = StyleSheet.create({
     color: colors.charcoal,
     flex: 1,
     marginRight: 8,
-  },
-  favToggle: {
-    fontSize: 20,
-    color: colors.warm,
   },
   recipeMeta: {
     fontSize: 12,

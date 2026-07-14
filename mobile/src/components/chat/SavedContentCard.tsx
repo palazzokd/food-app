@@ -1,17 +1,18 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { colors } from '../../theme/colors';
 import type { SavedContentInfo } from '../../types/chat';
 
 const CARD_CONFIG: Record<
   SavedContentInfo['contentType'],
-  { emoji: string; label: string; action: string }
+  { icon: keyof typeof Ionicons.glyphMap; label: string; action: string }
 > = {
-  recipe_saved: { emoji: '📖', label: 'Recipe saved', action: 'View recipe →' },
-  meal_plan_saved: { emoji: '📅', label: 'Meal plan saved', action: 'View plan →' },
-  grocery_list_saved: { emoji: '🛒', label: 'Grocery list updated', action: 'View list →' },
-  nutrition_logged: { emoji: '🥬', label: 'Nutrition logged', action: 'View tracker →' },
+  recipe_saved: { icon: 'book', label: 'Recipe saved', action: 'View recipe' },
+  meal_plan_saved: { icon: 'calendar', label: 'Meal plan saved', action: 'View plan' },
+  grocery_list_saved: { icon: 'cart', label: 'Grocery list updated', action: 'View list' },
+  nutrition_logged: { icon: 'leaf', label: 'Nutrition logged', action: 'View tracker' },
 };
 
 export default function SavedContentCard({
@@ -26,12 +27,13 @@ export default function SavedContentCard({
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
-      <Text style={styles.emoji}>{config.emoji}</Text>
+      <Ionicons name={config.icon} size={20} color={colors.sage} style={styles.icon} />
       <View style={styles.textWrap}>
         <Text style={styles.label}>{config.label}</Text>
         {info.title ? <Text style={styles.title}>{info.title}</Text> : null}
       </View>
       <Text style={styles.action}>{config.action}</Text>
+      <Ionicons name="chevron-forward" size={14} color={colors.forest} />
     </TouchableOpacity>
   );
 }
@@ -48,8 +50,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 6,
   },
-  emoji: {
-    fontSize: 22,
+  icon: {
     marginRight: 10,
   },
   textWrap: {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { colors } from '../../theme/colors';
 
@@ -39,19 +40,19 @@ export function Pill({
 }
 
 export function StatCard({
-  emoji,
+  icon,
   value,
   label,
   sub,
 }: {
-  emoji: string;
+  icon: keyof typeof Ionicons.glyphMap;
   value: string;
   label: string;
   sub?: string;
 }) {
   return (
     <Card style={styles.statCard}>
-      <Text style={styles.statEmoji}>{emoji}</Text>
+      <Ionicons name={icon} size={20} color={colors.sage} style={styles.statIcon} />
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
       {sub ? <Text style={styles.statSub}>{sub}</Text> : null}
@@ -125,8 +126,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     padding: 14,
   },
-  statEmoji: {
-    fontSize: 22,
+  statIcon: {
     marginBottom: 6,
   },
   statValue: {

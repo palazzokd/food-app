@@ -13,9 +13,20 @@ async def create_conversation(
     family_profile_id: uuid.UUID | None,
     title: str | None = None,
 ) -> Conversation:
+    if not family_profile_id:
+        # New user chatting before onboarding — create an empty profile so the
+        # conversation has a home. Onboarding stays active until members exist.
+        from app.schemas.family import FamilyProfileCreate
+        from app.services import family_service
+
+        profile = await family_service.create_family_profile(
+            db, user_id, FamilyProfileCreate()
+        )
+        family_profile_id = profile.id
+
     conversation = Conversation(
         user_id=user_id,
-        family_profile_id=family_profile_id or user_id,  # temporary fallback
+        family_profile_id=family_profile_id,
         title=title,
     )
     db.add(conversation)

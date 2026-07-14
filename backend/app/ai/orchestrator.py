@@ -54,6 +54,10 @@ async def process_message(
     client = get_anthropic_client()
     max_tool_rounds = 10
 
+    # Collect text across ALL tool rounds so the persisted assistant message
+    # matches what the user actually saw streamed
+    round_texts: list[str] = []
+
     for _ in range(max_tool_rounds):
         # Call Claude
         response = await client.messages.create(
@@ -74,6 +78,9 @@ async def process_message(
                 yield {"type": "stream_chunk", "content": block.text}
             elif block.type == "tool_use":
                 tool_uses.append(block)
+
+        if assistant_text_parts:
+            round_texts.append("".join(assistant_text_parts))
 
         # If there are tool uses, handle them
         if tool_uses:
@@ -139,8 +146,8 @@ async def process_message(
             if response.stop_reason == "tool_use":
                 continue
 
-        # Save assistant message
-        full_text = "".join(assistant_text_parts)
+        # Save assistant message (all rounds' text, in order)
+        full_text = "\n\n".join(round_texts)
         if full_text:
             assistant_msg = Message(
                 conversation_id=conversation.id,

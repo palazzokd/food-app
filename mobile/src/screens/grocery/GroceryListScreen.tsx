@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { Card, CardTitle, EmptyState } from '../../components/ui';
 import { downloadAndSharePdf } from '../../services/pdf';
@@ -65,7 +66,8 @@ export default function GroceryListScreen({ navigation }: any) {
               </Text>
             </View>
             <TouchableOpacity style={styles.pdfBtn} onPress={sharePdf} disabled={sharing}>
-              <Text style={styles.pdfBtnText}>{sharing ? '…' : '📄 PDF'}</Text>
+              <Ionicons name="share-outline" size={15} color={colors.forest} />
+              <Text style={styles.pdfBtnText}>{sharing ? 'Preparing…' : 'PDF'}</Text>
             </TouchableOpacity>
           </View>
 
@@ -109,9 +111,20 @@ export default function GroceryListScreen({ navigation }: any) {
         />
       )}
 
-      <TouchableOpacity style={styles.aiButton} onPress={() => navigation.navigate('Chat')}>
+      <TouchableOpacity
+        style={styles.aiButton}
+        onPress={() =>
+          navigation.navigate('Chat', {
+            initialPrompt: groceryList
+              ? "Let's update my grocery list. Show me what's on it and ask me what to add or remove."
+              : "Build my grocery list from this week's meal plan, grouped by store, and flag any deals.",
+            promptKey: Date.now(),
+          })
+        }
+      >
+        <Ionicons name="sparkles" size={16} color={colors.white} style={styles.aiButtonIcon} />
         <Text style={styles.aiButtonText}>
-          💬 {groceryList ? 'Update list with AI' : 'Build grocery list with AI'}
+          {groceryList ? 'Update list with AI' : 'Build grocery list with AI'}
         </Text>
       </TouchableOpacity>
     </ScrollView>
@@ -151,6 +164,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   pdfBtnText: {
     color: colors.forest,
@@ -224,7 +240,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
     marginTop: 10,
+  },
+  aiButtonIcon: {
+    marginRight: 8,
   },
   aiButtonText: {
     color: colors.white,

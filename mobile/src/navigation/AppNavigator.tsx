@@ -1,7 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useAuthStore } from '../store/authStore';
 
@@ -75,9 +75,9 @@ function RecipesNavigator() {
   );
 }
 
-function tabIcon(emoji: string) {
-  return ({ color, size }: { color: string; size: number }) => (
-    <Text style={{ fontSize: size - 2, color }}>{emoji}</Text>
+function tabIcon(name: keyof typeof Ionicons.glyphMap, focusedName: keyof typeof Ionicons.glyphMap) {
+  return ({ color, size, focused }: { color: string; size: number; focused: boolean }) => (
+    <Ionicons name={focused ? focusedName : name} size={size} color={color} />
   );
 }
 
@@ -96,27 +96,30 @@ function MainTabs() {
       <Tab.Screen
         name="Home"
         component={HomeNavigator}
-        options={{ headerShown: false, tabBarIcon: tabIcon('🏠') }}
+        options={{ headerShown: false, tabBarIcon: tabIcon('home-outline', 'home') }}
       />
       <Tab.Screen
         name="Chat"
         component={ChatScreen}
-        options={{ title: 'FamilyPlate AI', tabBarIcon: tabIcon('💬') }}
+        options={{
+          title: 'FamilyPlate AI',
+          tabBarIcon: tabIcon('chatbubble-ellipses-outline', 'chatbubble-ellipses'),
+        }}
       />
       <Tab.Screen
         name="Meals"
         component={MealPlannerScreen}
-        options={{ title: 'Meal Planner', tabBarIcon: tabIcon('📅') }}
+        options={{ title: 'Meal Planner', tabBarIcon: tabIcon('calendar-outline', 'calendar') }}
       />
       <Tab.Screen
         name="Recipes"
         component={RecipesNavigator}
-        options={{ headerShown: false, tabBarIcon: tabIcon('📖') }}
+        options={{ headerShown: false, tabBarIcon: tabIcon('book-outline', 'book') }}
       />
       <Tab.Screen
         name="Grocery"
         component={GroceryListScreen}
-        options={{ title: 'Grocery List', tabBarIcon: tabIcon('🛒') }}
+        options={{ title: 'Grocery List', tabBarIcon: tabIcon('cart-outline', 'cart') }}
       />
     </Tab.Navigator>
   );

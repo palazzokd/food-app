@@ -13,10 +13,12 @@ import SavedContentCard from '../../components/chat/SavedContentCard';
 import type { ChatMessage, SavedContentInfo } from '../../types/chat';
 import type { WSEvent } from '../../types/chat';
 
-export default function ChatScreen({ navigation }: any) {
+export default function ChatScreen({ navigation, route }: any) {
   const wsRef = useRef<ChatWebSocket | null>(null);
   const flatListRef = useRef<FlatList>(null);
   const conversationIdRef = useRef<string | null>(null);
+  const pendingPromptRef = useRef<string | null>(null);
+  const lastPromptKeyRef = useRef<number>(0);
 
   const {
     messages,
@@ -35,6 +37,13 @@ export default function ChatScreen({ navigation }: any) {
   const handleWSEvent = useCallback((event: WSEvent) => {
     switch (event.type) {
       case 'connected':
+        // A quick-action prompt may have arrived before the socket opened
+        if (pendingPromptRef.current) {
+          const prompt = pendingPromptRef.current;
+          pendingPromptRef.current = null;
+          addUserMessage(prompt);
+          wsRef.current?.sendMessage(prompt);
+        }
         break;
       case 'stream_start':
         startStream();
@@ -112,8 +121,14 @@ export default function ChatScreen({ navigation }: any) {
         const ws = new ChatWebSocket(conv.id, handleWSEvent);
         wsRef.current = ws;
         ws.connect();
-      } catch (e) {
+      } catch (e: any) {
         console.error('Failed to create conversation:', e);
+        startStream();
+        appendStreamChunk(
+          `I couldn't start a conversation with the server (${e?.message || 'unknown error'}). ` +
+            'Pull down or reopen this tab to retry.'
+        );
+        endStream();
       }
     };
 
@@ -124,10 +139,40 @@ export default function ChatScreen({ navigation }: any) {
     };
   }, [handleWSEvent]);
 
+  // Quick actions on other tabs deep-link here with a prompt to auto-send
+  useEffect(() => {
+    const prompt: string | undefined = route?.params?.initialPrompt;
+    const promptKey: number | undefined = route?.params?.promptKey;
+    if (!prompt || !promptKey || promptKey === lastPromptKeyRef.current) return;
+    lastPromptKeyRef.current = promptKey;
+
+    if (wsRef.current?.isConnected()) {
+      addUserMessage(prompt);
+      clearQuiz();
+      wsRef.current.sendMessage(prompt);
+    } else {
+      pendingPromptRef.current = prompt;
+    }
+  }, [route?.params?.promptKey]);
+
   const handleSend = (text: string) => {
+    if (!wsRef.current?.isConnected()) {
+      addUserMessage(text);
+      appendSystemNotice();
+      return;
+    }
     addUserMessage(text);
     clearQuiz();
-    wsRef.current?.sendMessage(text);
+    wsRef.current.sendMessage(text);
+  };
+
+  // Surface connection problems instead of silently dropping messages
+  const appendSystemNotice = () => {
+    startStream();
+    appendStreamChunk(
+      "I couldn't reach the server just now. Check that your phone is on the same WiFi as the backend, then try again."
+    );
+    endStream();
   };
 
   const handleQuizSelect = (optionId: string, label: string) => {

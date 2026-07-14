@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { Card, EmptyState } from '../../components/ui';
 import { useDataStore } from '../../store/dataStore';
@@ -98,10 +99,18 @@ export default function MealPlannerScreen({ navigation }: any) {
 
       <TouchableOpacity
         style={styles.aiButton}
-        onPress={() => navigation.navigate('Chat')}
+        onPress={() =>
+          navigation.navigate('Chat', {
+            initialPrompt: mealPlan
+              ? "Let's adjust this week's meal plan. Show me what's planned and ask me what I'd like to change."
+              : 'Plan my dinners for this week around our family favorites, then log the nutrition targets for each day.',
+            promptKey: Date.now(),
+          })
+        }
       >
+        <Ionicons name="sparkles" size={16} color={colors.white} style={styles.aiButtonIcon} />
         <Text style={styles.aiButtonText}>
-          💬 {mealPlan ? 'Adjust plan with AI' : 'Plan this week with AI'}
+          {mealPlan ? 'Adjust plan with AI' : 'Plan this week with AI'}
         </Text>
       </TouchableOpacity>
     </ScrollView>
@@ -162,7 +171,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
     marginTop: 10,
+  },
+  aiButtonIcon: {
+    marginRight: 8,
   },
   aiButtonText: {
     color: colors.white,

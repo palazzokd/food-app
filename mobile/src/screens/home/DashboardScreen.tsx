@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { Card, CardTitle, StatCard } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
@@ -29,18 +30,32 @@ export default function DashboardScreen({ navigation }: any) {
   const firstName = user?.display_name?.split(' ')[0];
   const dinners = dashboard?.meal_plan?.entries.filter((e) => e.meal_type === 'dinner') ?? [];
 
-  const quickActions = [
-    { label: '💬 Ask FamilyPlate AI', target: 'Chat' },
-    { label: '🗓️ Meal Plan', target: 'Meals' },
-    { label: '📖 Recipes', target: 'Recipes' },
-    { label: '🛒 Grocery List', target: 'Grocery' },
-    { label: '🥬 Nutrition', target: 'Nutrition' },
-    { label: '👨‍👩‍👧‍👦 Family Profile', target: 'Family' },
+  const quickActions: {
+    label: string;
+    icon: keyof typeof Ionicons.glyphMap;
+    target: string;
+    prompt?: string;
+  }[] = [
+    {
+      label: 'Plan this week',
+      icon: 'sparkles',
+      target: 'Chat',
+      prompt:
+        'Plan my dinners for this week around our family favorites, then log the nutrition targets for each day.',
+    },
+    { label: 'Ask FamilyPlate AI', icon: 'chatbubble-ellipses-outline', target: 'Chat' },
+    { label: 'Meal Plan', icon: 'calendar-outline', target: 'Meals' },
+    { label: 'Recipes', icon: 'book-outline', target: 'Recipes' },
+    { label: 'Grocery List', icon: 'cart-outline', target: 'Grocery' },
+    { label: 'Nutrition', icon: 'leaf-outline', target: 'Nutrition' },
+    { label: 'Family Profile', icon: 'people-outline', target: 'Family' },
   ];
 
-  const navigate = (target: string) => {
+  const navigate = (target: string, prompt?: string) => {
     if (target === 'Nutrition' || target === 'Family') {
       navigation.navigate(target);
+    } else if (prompt) {
+      navigation.getParent()?.navigate(target, { initialPrompt: prompt, promptKey: Date.now() });
     } else {
       navigation.getParent()?.navigate(target);
     }
@@ -63,19 +78,19 @@ export default function DashboardScreen({ navigation }: any) {
 
       <View style={styles.statsRow}>
         <StatCard
-          emoji="🍽️"
+          icon="book-outline"
           value={String(dashboard?.recipe_count ?? 0)}
           label="Recipes"
-          sub={`${dashboard?.favorite_count ?? 0} favorites ⭐`}
+          sub={`${dashboard?.favorite_count ?? 0} favorites`}
         />
         <StatCard
-          emoji="📅"
+          icon="calendar-outline"
           value={dashboard?.meal_plan ? `${dashboard.meal_plan.entries.length}` : '—'}
           label="Meals planned"
           sub={dashboard?.meal_plan?.title ?? 'No plan yet'}
         />
         <StatCard
-          emoji="🥬"
+          icon="leaf-outline"
           value={`${dashboard?.nutrition.targets_hit ?? 0}`}
           label="Targets hit"
           sub="this week"
@@ -146,8 +161,9 @@ export default function DashboardScreen({ navigation }: any) {
             <TouchableOpacity
               key={a.label}
               style={styles.quickAction}
-              onPress={() => navigate(a.target)}
+              onPress={() => navigate(a.target, a.prompt)}
             >
+              <Ionicons name={a.icon} size={14} color={colors.forest} />
               <Text style={styles.quickActionText}>{a.label}</Text>
             </TouchableOpacity>
           ))}
@@ -280,6 +296,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   quickActionText: {
     fontSize: 12,
