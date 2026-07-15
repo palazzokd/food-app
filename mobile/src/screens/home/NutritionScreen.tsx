@@ -12,6 +12,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Card, CardTitle } from '../../components/ui';
 import { useDataStore } from '../../store/dataStore';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -147,8 +148,8 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   heroTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: fonts.display,
+    fontSize: 17,
     color: colors.white,
     marginBottom: 4,
   },

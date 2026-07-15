@@ -84,7 +84,14 @@ async def update_member(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    member = await family_service.update_household_member(db, member_id, data)
+    profile = await family_service.get_family_profile(db, current_user.id)
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No family profile found"
+        )
+    member = await family_service.update_household_member(
+        db, member_id, data, family_profile_id=profile.id
+    )
     if not member:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Member not found"
@@ -98,7 +105,14 @@ async def delete_member(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    deleted = await family_service.delete_household_member(db, member_id)
+    profile = await family_service.get_family_profile(db, current_user.id)
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No family profile found"
+        )
+    deleted = await family_service.delete_household_member(
+        db, member_id, family_profile_id=profile.id
+    )
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Member not found"

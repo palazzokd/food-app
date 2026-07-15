@@ -15,6 +15,7 @@ import { fetchRecipe } from '../../services/modules';
 import { downloadAndSharePdf } from '../../services/pdf';
 import { useDataStore } from '../../store/dataStore';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 import type { RecipeDetail } from '../../types/api';
 
 export default function RecipeDetailScreen({ route }: any) {
@@ -154,8 +155,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cream,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontFamily: fonts.displayBold,
+    fontSize: 24,
     color: colors.charcoal,
   },
   meta: {

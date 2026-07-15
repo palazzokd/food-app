@@ -58,11 +58,15 @@ async def add_household_member(
 
 
 async def update_household_member(
-    db: AsyncSession, member_id: uuid.UUID, data: HouseholdMemberUpdate
+    db: AsyncSession,
+    member_id: uuid.UUID,
+    data: HouseholdMemberUpdate,
+    family_profile_id: uuid.UUID | None = None,
 ) -> HouseholdMember | None:
-    result = await db.execute(
-        select(HouseholdMember).where(HouseholdMember.id == member_id)
-    )
+    query = select(HouseholdMember).where(HouseholdMember.id == member_id)
+    if family_profile_id:
+        query = query.where(HouseholdMember.family_profile_id == family_profile_id)
+    result = await db.execute(query)
     member = result.scalar_one_or_none()
     if not member:
         return None
@@ -74,11 +78,14 @@ async def update_household_member(
 
 
 async def delete_household_member(
-    db: AsyncSession, member_id: uuid.UUID
+    db: AsyncSession,
+    member_id: uuid.UUID,
+    family_profile_id: uuid.UUID | None = None,
 ) -> bool:
-    result = await db.execute(
-        select(HouseholdMember).where(HouseholdMember.id == member_id)
-    )
+    query = select(HouseholdMember).where(HouseholdMember.id == member_id)
+    if family_profile_id:
+        query = query.where(HouseholdMember.family_profile_id == family_profile_id)
+    result = await db.execute(query)
     member = result.scalar_one_or_none()
     if not member:
         return False

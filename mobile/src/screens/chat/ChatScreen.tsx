@@ -211,7 +211,7 @@ export default function ChatScreen({ navigation, route }: any) {
                 message={{
                   id: 'streaming',
                   role: 'assistant',
-                  content: currentStreamText,
+                  content: currentStreamText + ' ▍',
                   timestamp: new Date(),
                 }}
               />

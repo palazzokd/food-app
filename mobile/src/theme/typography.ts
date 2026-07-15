@@ -1,15 +1,26 @@
 import { StyleSheet } from 'react-native';
 
+// Display font (headings, greetings, screen titles) — loaded in App.tsx
+export const fonts = {
+  display: 'Fraunces_600SemiBold',
+  displayBold: 'Fraunces_700Bold',
+};
+
 export const typography = StyleSheet.create({
+  display: {
+    fontFamily: fonts.displayBold,
+    fontSize: 26,
+    lineHeight: 32,
+  },
   h1: {
-    fontSize: 28,
-    fontWeight: '700',
-    lineHeight: 34,
+    fontFamily: fonts.displayBold,
+    fontSize: 24,
+    lineHeight: 30,
   },
   h2: {
-    fontSize: 22,
-    fontWeight: '600',
-    lineHeight: 28,
+    fontFamily: fonts.display,
+    fontSize: 20,
+    lineHeight: 26,
   },
   h3: {
     fontSize: 18,

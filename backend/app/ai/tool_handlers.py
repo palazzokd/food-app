@@ -29,6 +29,7 @@ async def handle_tool_call(
     handlers = {
         "quiz_options": _handle_quiz_options,
         "save_family_member": _handle_save_family_member,
+        "update_family_member": _handle_update_family_member,
         "save_preference": _handle_save_preference,
         "get_family_profile": _handle_get_family_profile,
         "save_recipe": _handle_save_recipe,
@@ -98,6 +99,9 @@ async def _handle_save_family_member(
         role=MemberRole(role_str),
         nutritional_stage=NutritionalStage(stage_str),
         dietary_restrictions=tool_input.get("dietary_restrictions", []),
+        flavor_preferences=tool_input.get("flavor_preferences", []),
+        texture_preferences=tool_input.get("texture_preferences", []),
+        allergens_introduced=tool_input.get("allergens_introduced", []),
     )
 
     member = await family_service.add_household_member(db, profile.id, member_data)
@@ -161,6 +165,7 @@ async def _handle_get_family_profile(
     members = []
     for m in profile.members:
         members.append({
+            "member_id": str(m.id),
             "name": m.name,
             "age_months": m.age_months,
             "role": m.role.value,
@@ -472,4 +477,45 @@ async def _handle_log_nutrition(
         "legumes": record.legumes,
         "leafy_greens": record.leafy_greens,
         "nuts_seeds": record.nuts_seeds,
+    }
+
+
+async def _handle_update_family_member(
+    tool_input: dict,
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    family_profile_id: uuid.UUID | None,
+    **kwargs,
+) -> dict:
+    from app.schemas.family import HouseholdMemberUpdate
+
+    profile_id = await _require_profile_id(db, user_id, family_profile_id)
+    if not profile_id:
+        return {"error": "No family profile exists yet"}
+
+    try:
+        member_id = uuid.UUID(tool_input["member_id"])
+    except (KeyError, ValueError):
+        return {"error": "Invalid member_id — call get_family_profile for valid IDs"}
+
+    fields = {
+        k: v
+        for k, v in tool_input.items()
+        if k != "member_id" and v is not None
+    }
+    if "role" in fields:
+        fields["role"] = MemberRole(fields["role"])
+    if "nutritional_stage" in fields:
+        fields["nutritional_stage"] = NutritionalStage(fields["nutritional_stage"])
+
+    member = await family_service.update_household_member(
+        db, member_id, HouseholdMemberUpdate(**fields), family_profile_id=profile_id
+    )
+    if not member:
+        return {"error": "Member not found — call get_family_profile for valid IDs"}
+    return {
+        "status": "updated",
+        "type": "member_updated",
+        "member_id": str(member.id),
+        "name": member.name,
     }

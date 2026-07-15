@@ -12,8 +12,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 import { EmptyState, Tag } from '../../components/ui';
+import PressableScale from '../../components/ui/PressableScale';
 import { useDataStore } from '../../store/dataStore';
 import { colors } from '../../theme/colors';
+import { recipeGlyph, recipeTint } from '../../theme/recipeVisuals';
 import type { RecipeSummary } from '../../types/api';
 
 const FILTERS = ['All', 'Breakfast', 'Lunch', 'Dinner', '⭐ Favorites'];
@@ -36,34 +38,41 @@ export default function RecipeLibraryScreen({ navigation }: any) {
   });
 
   const renderRecipe = ({ item }: { item: RecipeSummary }) => (
-    <TouchableOpacity
+    <PressableScale
       style={styles.recipeCard}
       onPress={() => navigation.navigate('RecipeDetail', { recipeId: item.id })}
     >
-      <View style={styles.recipeHeader}>
-        <Text style={styles.recipeTitle}>{item.title}</Text>
-        <TouchableOpacity
-          onPress={() => toggleRecipeFavorite(item.id, !item.is_favorite)}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons
-            name={item.is_favorite ? 'heart' : 'heart-outline'}
-            size={20}
-            color={item.is_favorite ? colors.warm : colors.textSecondary}
-          />
-        </TouchableOpacity>
+      <View style={[styles.tile, { backgroundColor: recipeTint(item.title) }]}>
+        <Text style={styles.tileGlyph}>{recipeGlyph(item.cuisine, item.category)}</Text>
       </View>
-      <Text style={styles.recipeMeta}>
-        {[item.category, item.cuisine, item.protein, item.total_minutes ? `${item.total_minutes} min` : null]
-          .filter(Boolean)
-          .join(' · ')}
-      </Text>
-      <View style={styles.tagRow}>
-        {item.nutrition_tags.map((t) => (
-          <Tag key={t} label={t.replace('_', ' ')} />
-        ))}
+      <View style={styles.recipeBody}>
+        <View style={styles.recipeHeader}>
+          <Text style={styles.recipeTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <TouchableOpacity
+            onPress={() => toggleRecipeFavorite(item.id, !item.is_favorite)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name={item.is_favorite ? 'heart' : 'heart-outline'}
+              size={20}
+              color={item.is_favorite ? colors.warm : colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.recipeMeta}>
+          {[item.cuisine, item.protein, item.total_minutes ? `${item.total_minutes} min` : null]
+            .filter(Boolean)
+            .join(' · ')}
+        </Text>
+        <View style={styles.tagRow}>
+          {item.nutrition_tags.map((t) => (
+            <Tag key={t} label={t.replace('_', ' ')} />
+          ))}
+        </View>
       </View>
-    </TouchableOpacity>
+    </PressableScale>
   );
 
   return (
@@ -153,11 +162,27 @@ const styles = StyleSheet.create({
   },
   recipeCard: {
     backgroundColor: colors.surface,
-    borderRadius: 10,
-    padding: 14,
+    borderRadius: 12,
+    padding: 12,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tile: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  tileGlyph: {
+    fontSize: 26,
+  },
+  recipeBody: {
+    flex: 1,
   },
   recipeHeader: {
     flexDirection: 'row',

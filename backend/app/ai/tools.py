@@ -38,8 +38,9 @@ TOOL_DEFINITIONS = [
     {
         "name": "save_family_member",
         "description": (
-            "Save a new household member to the family profile. Use this when "
-            "you learn about a new person in the household during conversation."
+            "Save a NEW household member to the family profile. Use this only for "
+            "people not already in the profile — use update_family_member to change "
+            "an existing member (check get_family_profile first)."
         ),
         "input_schema": {
             "type": "object",
@@ -61,10 +62,67 @@ TOOL_DEFINITIONS = [
                 "dietary_restrictions": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of dietary restrictions",
+                    "description": "Dietary restrictions and allergies",
+                },
+                "flavor_preferences": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Foods and flavors this person loves",
+                },
+                "texture_preferences": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Texture likes/dislikes (mostly for young children)",
+                },
+                "allergens_introduced": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Allergens already safely introduced (for infants)",
                 },
             },
             "required": ["name", "role"],
+        },
+    },
+    {
+        "name": "update_family_member",
+        "description": (
+            "Update an existing household member's details (age, allergies, "
+            "preferences). Get member_id from get_family_profile. Array fields "
+            "replace the stored value in full, so include existing items you "
+            "want to keep."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "member_id": {"type": "string", "description": "UUID from get_family_profile"},
+                "name": {"type": "string"},
+                "age_months": {"type": "integer"},
+                "role": {
+                    "type": "string",
+                    "enum": ["adult", "toddler", "infant"],
+                },
+                "nutritional_stage": {
+                    "type": "string",
+                    "enum": ["adult", "palate_expansion", "allergen_introduction"],
+                },
+                "dietary_restrictions": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "flavor_preferences": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "texture_preferences": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "allergens_introduced": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+            },
+            "required": ["member_id"],
         },
     },
     {

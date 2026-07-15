@@ -11,9 +11,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Card, CardTitle, StatCard } from '../../components/ui';
+import PressableScale from '../../components/ui/PressableScale';
 import { useAuthStore } from '../../store/authStore';
 import { useDataStore } from '../../store/dataStore';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -158,14 +160,14 @@ export default function DashboardScreen({ navigation }: any) {
         <CardTitle>Quick Actions</CardTitle>
         <View style={styles.actionsWrap}>
           {quickActions.map((a) => (
-            <TouchableOpacity
+            <PressableScale
               key={a.label}
               style={styles.quickAction}
               onPress={() => navigate(a.target, a.prompt)}
             >
               <Ionicons name={a.icon} size={14} color={colors.forest} />
               <Text style={styles.quickActionText}>{a.label}</Text>
-            </TouchableOpacity>
+            </PressableScale>
           ))}
         </View>
       </Card>
@@ -190,8 +192,8 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   greeting: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontFamily: fonts.displayBold,
+    fontSize: 24,
     color: colors.forest,
     marginBottom: 6,
   },

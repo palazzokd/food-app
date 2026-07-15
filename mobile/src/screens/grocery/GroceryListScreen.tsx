@@ -12,9 +12,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Card, CardTitle, EmptyState } from '../../components/ui';
+import PressableScale from '../../components/ui/PressableScale';
 import { downloadAndSharePdf } from '../../services/pdf';
 import { useDataStore } from '../../store/dataStore';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 import type { GroceryItem } from '../../types/api';
 
 export default function GroceryListScreen({ navigation }: any) {
@@ -71,6 +73,12 @@ export default function GroceryListScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
+          {total > 0 ? (
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${(checked / total) * 100}%` }]} />
+            </View>
+          ) : null}
+
           {groceryList.strategy_note ? (
             <View style={styles.strategy}>
               <Text style={styles.strategyTitle}>🕐 Shopping Strategy</Text>
@@ -111,7 +119,7 @@ export default function GroceryListScreen({ navigation }: any) {
         />
       )}
 
-      <TouchableOpacity
+      <PressableScale
         style={styles.aiButton}
         onPress={() =>
           navigation.navigate('Chat', {
@@ -126,7 +134,7 @@ export default function GroceryListScreen({ navigation }: any) {
         <Text style={styles.aiButtonText}>
           {groceryList ? 'Update list with AI' : 'Build grocery list with AI'}
         </Text>
-      </TouchableOpacity>
+      </PressableScale>
     </ScrollView>
   );
 }
@@ -149,8 +157,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   heading: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.displayBold,
+    fontSize: 22,
     color: colors.forest,
   },
   subheading: {
@@ -172,6 +180,18 @@ const styles = StyleSheet.create({
     color: colors.forest,
     fontWeight: '600',
     fontSize: 13,
+  },
+  progressTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.mist,
+    marginBottom: 14,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: colors.sage,
   },
   strategy: {
     backgroundColor: '#FFF8E1',

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 import { useAuthStore } from '../../store/authStore';
 
 type Props = NativeStackScreenProps<any, 'Login'>;
@@ -87,8 +88,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   logo: {
-    fontSize: 36,
-    fontWeight: '700',
+    fontFamily: fonts.displayBold,
+    fontSize: 38,
     color: colors.primary,
     textAlign: 'center',
     marginBottom: 8,

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 import { useAuthStore } from '../../store/authStore';
 
 type Props = NativeStackScreenProps<any, 'Register'>;

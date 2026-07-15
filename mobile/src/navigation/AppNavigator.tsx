@@ -3,12 +3,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/typography';
 import { useAuthStore } from '../store/authStore';
 
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import ChatScreen from '../screens/chat/ChatScreen';
 import FamilyProfileScreen from '../screens/family/FamilyProfileScreen';
+import MemberEditScreen from '../screens/family/MemberEditScreen';
 import DashboardScreen from '../screens/home/DashboardScreen';
 import NutritionScreen from '../screens/home/NutritionScreen';
 import MealPlannerScreen from '../screens/meals/MealPlannerScreen';
@@ -22,9 +24,10 @@ const RecipesStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const stackHeaderOptions = {
-  headerStyle: { backgroundColor: colors.forest },
-  headerTintColor: colors.white,
-  headerTitleStyle: { fontWeight: '600' as const },
+  headerStyle: { backgroundColor: colors.cream },
+  headerTintColor: colors.forest,
+  headerTitleStyle: { fontFamily: fonts.display, fontSize: 19, color: colors.forest },
+  headerShadowVisible: false,
 };
 
 function AuthNavigator() {
@@ -53,6 +56,13 @@ function HomeNavigator() {
         name="Family"
         component={FamilyProfileScreen}
         options={{ title: 'My Family' }}
+      />
+      <HomeStack.Screen
+        name="MemberEdit"
+        component={MemberEditScreen}
+        options={({ route }: any) => ({
+          title: route.params?.member ? route.params.member.name : 'Add Member',
+        })}
       />
     </HomeStack.Navigator>
   );
@@ -87,10 +97,15 @@ function MainTabs() {
       screenOptions={{
         tabBarActiveTintColor: colors.forest,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: { borderTopColor: colors.divider },
-        headerStyle: { backgroundColor: colors.forest },
-        headerTintColor: colors.white,
-        headerTitleStyle: { fontWeight: '600' },
+        tabBarStyle: {
+          backgroundColor: colors.white,
+          borderTopColor: colors.divider,
+        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        headerStyle: { backgroundColor: colors.cream },
+        headerTintColor: colors.forest,
+        headerTitleStyle: { fontFamily: fonts.display, fontSize: 19, color: colors.forest },
+        headerShadowVisible: false,
       }}
     >
       <Tab.Screen

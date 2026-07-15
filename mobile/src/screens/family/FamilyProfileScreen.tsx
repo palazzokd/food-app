@@ -1,127 +1,200 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { colors } from '../../theme/colors';
-import { getProfile } from '../../services/family';
+import React, { useCallback, useState } from 'react';
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+
 import MemberCard from '../../components/family/MemberCard';
-import type { FamilyProfileResponse } from '../../types/api';
+import { Card, CardTitle } from '../../components/ui';
+import PressableScale from '../../components/ui/PressableScale';
+import { getProfile } from '../../services/family';
 import { useAuthStore } from '../../store/authStore';
+import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/typography';
+import type { FamilyProfileResponse } from '../../types/api';
 
-export default function FamilyProfileScreen() {
+export default function FamilyProfileScreen({ navigation }: any) {
   const [profile, setProfile] = useState<FamilyProfileResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { logout } = useAuthStore();
-
-  useEffect(() => {
-    loadProfile();
-  }, []);
 
   const loadProfile = async () => {
     setLoading(true);
-    const data = await getProfile();
-    setProfile(data);
+    setProfile(await getProfile());
     setLoading(false);
   };
 
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [])
+  );
+
+  const reviewWithAI = () => {
+    navigation.getParent()?.navigate('Chat', {
+      initialPrompt:
+        "Let's review my family profile together. Show me who you have saved, then go member by member asking about ages, allergies, dietary restrictions, and what each person loves to eat — and update the profile as we go.",
+      promptKey: Date.now(),
+    });
+  };
 
   return (
-    <View style={styles.container}>
-      {profile ? (
-        <>
-          <View style={styles.header}>
-            <Text style={styles.title}>{profile.household_name || 'My Family'}</Text>
-            <Text style={styles.subtitle}>
-              {profile.max_prep_minutes}min prep · {profile.dinners_per_cycle} dinners/{profile.planning_horizon_days} days
-            </Text>
-          </View>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={loadProfile} />}
+    >
+      <Text style={styles.heading}>{profile?.household_name || 'My Family'}</Text>
+      <Text style={styles.subheading}>
+        {profile?.members.length ?? 0} member{(profile?.members.length ?? 0) === 1 ? '' : 's'}
+      </Text>
 
-          <Text style={styles.sectionTitle}>Household Members</Text>
-          <FlatList
-            data={profile.members}
-            renderItem={({ item }) => <MemberCard member={item} />}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.list}
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>
-                No members yet. Start a chat to set up your family profile!
-              </Text>
-            }
-          />
-        </>
-      ) : (
-        <View style={styles.centered}>
-          <Text style={styles.emptyText}>
-            No family profile yet. Start chatting to set one up!
+      {(profile?.members ?? []).map((member) => (
+        <MemberCard
+          key={member.id}
+          member={member}
+          onPress={() => navigation.navigate('MemberEdit', { member })}
+        />
+      ))}
+
+      <PressableScale
+        style={styles.addBtn}
+        onPress={() => navigation.navigate('MemberEdit')}
+      >
+        <Ionicons name="person-add-outline" size={16} color={colors.forest} />
+        <Text style={styles.addBtnText}>Add family member</Text>
+      </PressableScale>
+
+      <PressableScale style={styles.aiButton} onPress={reviewWithAI}>
+        <Ionicons name="sparkles" size={16} color={colors.white} style={{ marginRight: 8 }} />
+        <Text style={styles.aiButtonText}>Review & update with AI</Text>
+      </PressableScale>
+
+      {profile ? (
+        <Card style={styles.constraintsCard}>
+          <CardTitle>Cooking Setup</CardTitle>
+          {[
+            { label: 'Max active prep', value: `${profile.max_prep_minutes} minutes` },
+            { label: 'Planning horizon', value: `${profile.planning_horizon_days} days` },
+            {
+              label: 'Dinners per cycle',
+              value: `${profile.dinners_per_cycle} × ${profile.nights_per_dinner} nights each`,
+            },
+            { label: 'Batch prep day', value: capitalize(profile.batch_prep_day) },
+          ].map((row) => (
+            <View key={row.label} style={styles.constraintRow}>
+              <Text style={styles.constraintLabel}>{row.label}</Text>
+              <Text style={styles.constraintValue}>{row.value}</Text>
+            </View>
+          ))}
+          <Text style={styles.constraintHint}>
+            Tell the AI to change any of these — e.g. "we can do 45 minute dinners now".
           </Text>
-        </View>
-      )}
+        </Card>
+      ) : null}
 
       <TouchableOpacity style={styles.logoutButton} onPress={logout}>
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.cream,
   },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  header: {
-    padding: 20,
-    backgroundColor: colors.primary,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.textInverse,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textInverse,
-    opacity: 0.8,
-    marginTop: 4,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
+  content: {
     padding: 16,
-    paddingBottom: 8,
+    paddingBottom: 40,
   },
-  list: {
-    paddingHorizontal: 16,
+  heading: {
+    fontFamily: fonts.displayBold,
+    fontSize: 24,
+    color: colors.forest,
   },
-  emptyText: {
-    fontSize: 16,
+  subheading: {
+    fontSize: 13,
     color: colors.textSecondary,
-    textAlign: 'center',
-    padding: 20,
+    marginTop: 2,
+    marginBottom: 14,
+  },
+  addBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1.5,
+    borderColor: colors.forest,
+    borderRadius: 10,
+    paddingVertical: 12,
+    marginBottom: 10,
+  },
+  addBtnText: {
+    color: colors.forest,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  aiButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.forest,
+    borderRadius: 10,
+    paddingVertical: 14,
+    marginBottom: 16,
+  },
+  aiButtonText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  constraintsCard: {
+    marginBottom: 16,
+  },
+  constraintRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
+  },
+  constraintLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  constraintValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.charcoal,
+  },
+  constraintHint: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 10,
+    fontStyle: 'italic',
   },
   logoutButton: {
-    margin: 16,
     padding: 14,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.error,
     alignItems: 'center',
   },
   logoutText: {
     color: colors.error,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
   },
 });

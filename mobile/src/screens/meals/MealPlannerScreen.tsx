@@ -11,8 +11,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Card, EmptyState } from '../../components/ui';
+import PressableScale from '../../components/ui/PressableScale';
 import { useDataStore } from '../../store/dataStore';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 import type { MealPlanEntry, MealTypeValue } from '../../types/api';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -97,7 +99,7 @@ export default function MealPlannerScreen({ navigation }: any) {
         />
       )}
 
-      <TouchableOpacity
+      <PressableScale
         style={styles.aiButton}
         onPress={() =>
           navigation.navigate('Chat', {
@@ -112,7 +114,7 @@ export default function MealPlannerScreen({ navigation }: any) {
         <Text style={styles.aiButtonText}>
           {mealPlan ? 'Adjust plan with AI' : 'Plan this week with AI'}
         </Text>
-      </TouchableOpacity>
+      </PressableScale>
     </ScrollView>
   );
 }
@@ -127,8 +129,8 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   heading: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.displayBold,
+    fontSize: 22,
     color: colors.forest,
   },
   subheading: {
