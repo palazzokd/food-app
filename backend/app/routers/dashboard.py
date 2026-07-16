@@ -11,7 +11,6 @@ from app.models.recipe import Recipe
 from app.models.user import User
 from app.schemas.grocery import GroceryListResponse
 from app.schemas.meal_plan import MealPlanResponse
-from app.schemas.nutrition import NutritionDayResponse
 from app.services import grocery_service, meal_plan_service, nutrition_service
 from app.services.meal_plan_service import current_week_monday
 
@@ -43,12 +42,10 @@ async def get_dashboard(
     plan = await meal_plan_service.get_current_meal_plan(db, profile.id)
     grocery_list = await grocery_service.get_active_list(db, profile.id)
 
+    from app.routers.nutrition import _build_week
+
     week_start = current_week_monday()
-    nutrition_days = await nutrition_service.get_week(db, profile.id, week_start)
-    targets_hit = sum(
-        int(d.legumes) + int(d.leafy_greens) + int(d.nuts_seeds)
-        for d in nutrition_days
-    )
+    nutrition_week = await _build_week(db, profile.id, week_start)
 
     trial_days_left = None
     if current_user.plan == "trial" and current_user.trial_ends_at:
@@ -62,12 +59,7 @@ async def get_dashboard(
         "grocery_list": (
             GroceryListResponse.model_validate(grocery_list) if grocery_list else None
         ),
-        "nutrition": {
-            "week_start": week_start,
-            "days": [NutritionDayResponse.model_validate(d) for d in nutrition_days],
-            "targets_hit": targets_hit,
-            "targets_possible": 21,
-        },
+        "nutrition": nutrition_week,
         "plan": current_user.plan,
         "trial_days_left": trial_days_left,
     }

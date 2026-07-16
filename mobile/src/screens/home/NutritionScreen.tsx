@@ -8,42 +8,18 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { Card, CardTitle } from '../../components/ui';
+import PressableScale from '../../components/ui/PressableScale';
 import { useDataStore } from '../../store/dataStore';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 
 const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const TARGET_COLORS = [colors.forest, colors.sage, colors.warm, colors.moss, colors.amber, colors.blue];
 
-const TARGETS = [
-  {
-    key: 'legumes' as const,
-    emoji: '🫘',
-    name: 'Legumes',
-    desc: '½ cup most days',
-    examples: 'Black beans, chickpeas, lentils, edamame',
-    color: colors.forest,
-  },
-  {
-    key: 'leafy_greens' as const,
-    emoji: '🥬',
-    name: 'Leafy Greens',
-    desc: '1 serving daily',
-    examples: 'Spinach, arugula, kale, romaine',
-    color: colors.sage,
-  },
-  {
-    key: 'nuts_seeds' as const,
-    emoji: '🌰',
-    name: 'Nuts & Seeds',
-    desc: 'Small handful most days',
-    examples: 'Walnuts, pepitas, pine nuts, hemp, chia, flax',
-    color: colors.warm,
-  },
-];
-
-export default function NutritionScreen() {
+export default function NutritionScreen({ navigation }: any) {
   const { nutritionWeek, loadNutrition, toggleNutritionTarget, loading } = useDataStore();
 
   useFocusEffect(
@@ -52,24 +28,10 @@ export default function NutritionScreen() {
     }, [])
   );
 
-  // Build a full Mon–Sun view of the week, merging in logged days
-  const weekDays: { date: string; dayIdx: number; logged?: (typeof nutritionWeek extends null ? never : NonNullable<typeof nutritionWeek>['days'][number]) }[] = [];
-  if (nutritionWeek) {
-    const start = new Date(nutritionWeek.week_start + 'T00:00:00');
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      const iso = d.toISOString().slice(0, 10);
-      weekDays.push({
-        date: iso,
-        dayIdx: i,
-        logged: nutritionWeek.days.find((x) => x.date === iso),
-      });
-    }
-  }
-
+  const targets = nutritionWeek?.targets ?? [];
+  const days = nutritionWeek?.days ?? [];
   const score = nutritionWeek?.targets_hit ?? 0;
-  const possible = nutritionWeek?.targets_possible ?? 21;
+  const possible = nutritionWeek?.targets_possible ?? 0;
 
   return (
     <ScrollView
@@ -78,56 +40,81 @@ export default function NutritionScreen() {
       refreshControl={<RefreshControl refreshing={loading} onRefresh={loadNutrition} />}
     >
       <View style={styles.hero}>
-        <Text style={styles.heroTitle}>The Plate At A Glance Framework</Text>
+        <Text style={styles.heroTitle}>Your Daily Targets</Text>
         <Text style={styles.heroSub}>
-          Three foods. Eaten most days. Built into meals, not supplements. Consistency beats
-          perfection.
+          A few foods, eaten most days, built into meals — consistency beats perfection.
+          These are yours to define.
         </Text>
       </View>
 
-      {TARGETS.map((t) => (
-        <Card key={t.key} style={{ borderTopWidth: 4, borderTopColor: t.color }}>
-          <Text style={styles.targetEmoji}>{t.emoji}</Text>
-          <Text style={[styles.targetName, { color: t.color }]}>{t.name}</Text>
-          <Text style={styles.targetDesc}>{t.desc}</Text>
-          <Text style={styles.targetExamples}>{t.examples}</Text>
-        </Card>
+      {targets.map((t, i) => (
+        <PressableScale
+          key={t.id}
+          style={{ ...styles.targetCard, borderTopColor: TARGET_COLORS[i % TARGET_COLORS.length] }}
+          onPress={() => navigation.navigate('TargetEdit', { target: t })}
+        >
+          <View style={styles.targetHeader}>
+            <Text style={styles.targetEmoji}>{t.emoji || '🎯'}</Text>
+            <View style={styles.targetTitleWrap}>
+              <Text style={[styles.targetName, { color: TARGET_COLORS[i % TARGET_COLORS.length] }]}>
+                {t.name}
+              </Text>
+              {t.description ? <Text style={styles.targetDesc}>{t.description}</Text> : null}
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
+          </View>
+          {t.examples ? <Text style={styles.targetExamples}>{t.examples}</Text> : null}
+        </PressableScale>
       ))}
 
-      <Card>
-        <CardTitle>This Week — Tap to Toggle</CardTitle>
-        <View style={styles.gridHeader}>
-          <View style={styles.dayCol} />
-          {TARGETS.map((t) => (
-            <Text key={t.key} style={styles.colLabel}>
-              {t.emoji}
-            </Text>
-          ))}
-        </View>
-        {weekDays.map(({ date, dayIdx, logged }) => (
-          <View key={date} style={styles.gridRow}>
-            <Text style={styles.dayLabel}>{DAYS_SHORT[dayIdx]}</Text>
-            {TARGETS.map((t) => {
-              const hit = logged ? logged[t.key] : false;
-              return (
-                <TouchableOpacity
-                  key={t.key}
-                  style={styles.cell}
-                  onPress={() => toggleNutritionTarget(date, t.key, !hit)}
-                >
-                  <Text style={styles.cellMark}>{hit ? '✅' : '⬜'}</Text>
-                </TouchableOpacity>
-              );
-            })}
+      <PressableScale style={styles.addBtn} onPress={() => navigation.navigate('TargetEdit')}>
+        <Ionicons name="add" size={16} color={colors.forest} />
+        <Text style={styles.addBtnText}>Add a target</Text>
+      </PressableScale>
+
+      {targets.length > 0 ? (
+        <Card>
+          <CardTitle>This Week — Tap to Toggle</CardTitle>
+          <View style={styles.gridHeader}>
+            <View style={styles.dayCol} />
+            {targets.map((t) => (
+              <Text key={t.id} style={styles.colLabel}>
+                {t.emoji || '🎯'}
+              </Text>
+            ))}
           </View>
-        ))}
-        <View style={styles.scoreBox}>
-          <Text style={styles.scoreText}>
-            Weekly score: {score}/{possible} targets hit
-            {possible > 0 ? ` — ${Math.round((score / possible) * 100)}%` : ''}
+          {days.map((day, dayIdx) => (
+            <View key={day.date} style={styles.gridRow}>
+              <Text style={styles.dayLabel}>{DAYS_SHORT[dayIdx]}</Text>
+              {targets.map((t) => {
+                const hit = day.hits[t.id] ?? false;
+                return (
+                  <TouchableOpacity
+                    key={t.id}
+                    style={styles.cell}
+                    onPress={() => toggleNutritionTarget(t.id, day.date, !hit)}
+                  >
+                    <Text style={styles.cellMark}>{hit ? '✅' : '⬜'}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ))}
+          <View style={styles.scoreBox}>
+            <Text style={styles.scoreText}>
+              Weekly score: {score}/{possible} targets hit
+              {possible > 0 ? ` — ${Math.round((score / possible) * 100)}%` : ''}
+            </Text>
+          </View>
+        </Card>
+      ) : (
+        <Card>
+          <Text style={styles.emptyText}>
+            No targets yet — add one above, or ask the AI to suggest a framework for your
+            family's goals.
           </Text>
-        </View>
-      </Card>
+        </Card>
+      )}
     </ScrollView>
   );
 }
@@ -158,23 +145,55 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     lineHeight: 19,
   },
+  targetCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderTopWidth: 4,
+    padding: 14,
+    marginBottom: 10,
+  },
+  targetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   targetEmoji: {
-    fontSize: 26,
-    marginBottom: 6,
+    fontSize: 24,
+    marginRight: 10,
+  },
+  targetTitleWrap: {
+    flex: 1,
   },
   targetName: {
     fontSize: 15,
     fontWeight: '700',
-    marginBottom: 3,
   },
   targetDesc: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.charcoal,
-    marginBottom: 4,
+    marginTop: 1,
   },
   targetExamples: {
     fontSize: 12,
     color: colors.textSecondary,
+    marginTop: 8,
+  },
+  addBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: colors.forest,
+    borderRadius: 10,
+    paddingVertical: 11,
+    marginBottom: 14,
+  },
+  addBtnText: {
+    color: colors.forest,
+    fontWeight: '600',
+    fontSize: 14,
   },
   gridHeader: {
     flexDirection: 'row',
@@ -217,5 +236,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: colors.moss,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 20,
   },
 });

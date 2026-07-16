@@ -129,29 +129,26 @@ export default function DashboardScreen({ navigation }: any) {
         </View>
         <View style={styles.nutritionHeader}>
           <View style={styles.nutritionDayCol} />
-          {['🫘', '🥬', '🌰'].map((e) => (
-            <Text key={e} style={styles.nutritionColLabel}>
-              {e}
+          {(dashboard?.nutrition.targets ?? []).map((t) => (
+            <Text key={t.id} style={styles.nutritionColLabel}>
+              {t.emoji || '🎯'}
             </Text>
           ))}
         </View>
-        {(dashboard?.nutrition.days ?? []).map((d) => {
-          const dayIdx = (new Date(d.date + 'T00:00:00').getDay() + 6) % 7;
-          return (
-            <View key={d.id} style={styles.nutritionRow}>
-              <Text style={styles.nutritionDay}>{DAYS_SHORT[dayIdx]}</Text>
-              {[d.legumes, d.leafy_greens, d.nuts_seeds].map((hit, i) => (
-                <Text key={i} style={styles.nutritionMark}>
-                  {hit ? '✅' : '⬜'}
-                </Text>
-              ))}
-            </View>
-          );
-        })}
+        {(dashboard?.nutrition.days ?? []).map((d, dayIdx) => (
+          <View key={d.date} style={styles.nutritionRow}>
+            <Text style={styles.nutritionDay}>{DAYS_SHORT[dayIdx]}</Text>
+            {(dashboard?.nutrition.targets ?? []).map((t) => (
+              <Text key={t.id} style={styles.nutritionMark}>
+                {d.hits[t.id] ? '✅' : '⬜'}
+              </Text>
+            ))}
+          </View>
+        ))}
         <View style={styles.scoreBox}>
           <Text style={styles.scoreText}>
             Weekly score: {dashboard?.nutrition.targets_hit ?? 0}/
-            {dashboard?.nutrition.targets_possible ?? 21} · consistency beats perfection ✓
+            {dashboard?.nutrition.targets_possible ?? 0} · consistency beats perfection ✓
           </Text>
         </View>
       </Card>

@@ -13,8 +13,8 @@ import {
   fetchNutritionWeek,
   fetchRecipes,
   toggleFavorite,
+  toggleNutritionCheck,
   updateGroceryItem,
-  updateNutritionDay,
 } from '../services/modules';
 
 interface DataState {
@@ -34,11 +34,7 @@ interface DataState {
 
   toggleRecipeFavorite: (id: string, isFavorite: boolean) => Promise<void>;
   toggleGroceryItem: (itemId: string, isChecked: boolean) => Promise<void>;
-  toggleNutritionTarget: (
-    date: string,
-    field: 'legumes' | 'leafy_greens' | 'nuts_seeds',
-    value: boolean
-  ) => Promise<void>;
+  toggleNutritionTarget: (targetId: string, date: string, hit: boolean) => Promise<void>;
 }
 
 export const useDataStore = create<DataState>((set, get) => ({
@@ -139,8 +135,8 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
   },
 
-  toggleNutritionTarget: async (date, field, value) => {
-    await updateNutritionDay(date, { [field]: value });
+  toggleNutritionTarget: async (targetId, date, hit) => {
+    await toggleNutritionCheck(targetId, date, hit);
     await get().loadNutrition();
   },
 }));

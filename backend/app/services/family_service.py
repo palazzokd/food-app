@@ -20,6 +20,10 @@ async def create_family_profile(
     db.add(profile)
     await db.commit()
     await db.refresh(profile)
+
+    from app.services import nutrition_service
+
+    await nutrition_service.seed_default_targets(db, profile.id)
     return profile
 
 

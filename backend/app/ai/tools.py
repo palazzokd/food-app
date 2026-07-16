@@ -193,11 +193,11 @@ TOOL_DEFINITIONS = [
                 },
                 "nutrition_tags": {
                     "type": "array",
-                    "items": {
-                        "type": "string",
-                        "enum": ["legumes", "leafy_greens", "nuts_seeds"],
-                    },
-                    "description": "Which of the family's daily nutrition targets this recipe hits",
+                    "items": {"type": "string"},
+                    "description": (
+                        "Names of the family's nutrition targets this recipe hits — "
+                        "use the exact target names from FAMILY CONTEXT"
+                    ),
                 },
                 "ingredients": {
                     "type": "array",
@@ -374,23 +374,63 @@ TOOL_DEFINITIONS = [
     {
         "name": "log_nutrition",
         "description": (
-            "Record which nutrition targets (legumes, leafy greens, nuts/seeds) the "
-            "family hit on a given date. Use when meals are planned or when the "
-            "family reports what they ate."
+            "Record which of the family's nutrition targets were hit on a given "
+            "date. Target names must match the family's configured targets (listed "
+            "in FAMILY CONTEXT). Use when meals are planned or when the family "
+            "reports what they ate."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
                 "date": {"type": "string", "description": "YYYY-MM-DD"},
-                "legumes": {"type": "boolean"},
-                "leafy_greens": {"type": "boolean"},
-                "nuts_seeds": {"type": "boolean"},
+                "targets_hit": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Exact names of the targets hit on this date",
+                },
                 "source_note": {
                     "type": "string",
                     "description": "Where the targets came from, e.g. 'Black beans (tacos) · Spinach (lunch)'",
                 },
             },
-            "required": ["date"],
+            "required": ["date", "targets_hit"],
+        },
+    },
+    {
+        "name": "web_search",
+        "description": (
+            "Search the web. Use ONLY when the answer needs current or external "
+            "information you don't reliably know: seasonal produce questions, "
+            "current food safety/allergen guidance, or when the family explicitly "
+            "asks you to look something up or find recipes online. Do NOT search "
+            "for routine meal planning, recipes you can compose yourself, or "
+            "store deals (search can't see store prices)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "count": {
+                    "type": "integer",
+                    "description": "Number of results (default 5, max 10)",
+                },
+            },
+            "required": ["query"],
+        },
+    },
+    {
+        "name": "fetch_page",
+        "description": (
+            "Fetch and read the text content of a web page — use after web_search "
+            "when a result looks promising and you need the full content (e.g. an "
+            "actual recipe, not just a snippet)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string"},
+            },
+            "required": ["url"],
         },
     },
 ]

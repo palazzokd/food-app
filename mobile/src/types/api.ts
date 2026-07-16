@@ -112,18 +112,26 @@ export interface GroceryList {
   created_at: string;
 }
 
-export interface NutritionDay {
+export interface NutritionTarget {
   id: string;
+  name: string;
+  emoji: string | null;
+  description: string | null;
+  examples: string | null;
+  sort_order: number;
+  is_active: boolean;
+}
+
+export interface NutritionDayStatus {
   date: string;
-  legumes: boolean;
-  leafy_greens: boolean;
-  nuts_seeds: boolean;
-  source_note: string | null;
+  hits: Record<string, boolean>; // target id -> hit
+  notes: Record<string, string>;
 }
 
 export interface NutritionWeek {
   week_start: string;
-  days: NutritionDay[];
+  targets: NutritionTarget[];
+  days: NutritionDayStatus[];
   targets_hit: number;
   targets_possible: number;
 }
@@ -133,7 +141,7 @@ export interface Dashboard {
   favorite_count: number;
   meal_plan: MealPlan | null;
   grocery_list: GroceryList | null;
-  nutrition: NutritionWeek & { week_start: string };
+  nutrition: NutritionWeek;
   plan: string;
   trial_days_left: number | null;
 }

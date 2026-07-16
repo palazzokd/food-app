@@ -4,26 +4,50 @@ from datetime import date
 from pydantic import BaseModel
 
 
-class NutritionDayUpdate(BaseModel):
-    legumes: bool | None = None
-    leafy_greens: bool | None = None
-    nuts_seeds: bool | None = None
-    source_note: str | None = None
+class NutritionTargetCreate(BaseModel):
+    name: str
+    emoji: str | None = None
+    description: str | None = None
+    examples: str | None = None
 
 
-class NutritionDayResponse(BaseModel):
+class NutritionTargetUpdate(BaseModel):
+    name: str | None = None
+    emoji: str | None = None
+    description: str | None = None
+    examples: str | None = None
+    sort_order: int | None = None
+    is_active: bool | None = None
+
+
+class NutritionTargetResponse(BaseModel):
     id: uuid.UUID
-    date: date
-    legumes: bool
-    leafy_greens: bool
-    nuts_seeds: bool
-    source_note: str | None
+    name: str
+    emoji: str | None
+    description: str | None
+    examples: str | None
+    sort_order: int
+    is_active: bool
 
     model_config = {"from_attributes": True}
 
 
+class NutritionDayStatus(BaseModel):
+    date: date
+    hits: dict[str, bool]  # target_id (str) -> hit
+    notes: dict[str, str]  # target_id (str) -> note
+
+
 class NutritionWeekResponse(BaseModel):
     week_start: date
-    days: list[NutritionDayResponse]
+    targets: list[NutritionTargetResponse]
+    days: list[NutritionDayStatus]
     targets_hit: int
     targets_possible: int
+
+
+class NutritionCheckToggle(BaseModel):
+    target_id: uuid.UUID
+    date: date
+    hit: bool
+    note: str | None = None

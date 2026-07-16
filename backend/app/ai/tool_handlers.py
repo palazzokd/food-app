@@ -15,7 +15,6 @@ from app.services import (
 from app.schemas.family import HouseholdMemberCreate
 from app.schemas.grocery import GroceryItemCreate, GroceryListCreate
 from app.schemas.meal_plan import MealPlanCreate, MealPlanEntryCreate
-from app.schemas.nutrition import NutritionDayUpdate
 from app.schemas.recipe import RecipeCreate, RecipeSource
 
 
@@ -40,6 +39,8 @@ async def handle_tool_call(
         "get_grocery_list": _handle_get_grocery_list,
         "update_grocery_items": _handle_update_grocery_items,
         "log_nutrition": _handle_log_nutrition,
+        "web_search": _handle_web_search,
+        "fetch_page": _handle_fetch_page,
     }
 
     handler = handlers.get(tool_name)
@@ -174,6 +175,8 @@ async def _handle_get_family_profile(
             "flavor_preferences": m.flavor_preferences,
         })
 
+    targets = await nutrition_service.list_targets(db, profile.id)
+
     return {
         "household_name": profile.household_name,
         "max_prep_minutes": profile.max_prep_minutes,
@@ -181,6 +184,9 @@ async def _handle_get_family_profile(
         "dinners_per_cycle": profile.dinners_per_cycle,
         "batch_prep_day": profile.batch_prep_day,
         "members": members,
+        "nutrition_targets": [
+            {"name": t.name, "description": t.description} for t in targets
+        ],
     }
 
 
@@ -463,21 +469,31 @@ async def _handle_log_nutrition(
         return {"error": "No family profile exists yet"}
 
     day = date.fromisoformat(tool_input["date"])
-    data = NutritionDayUpdate(
-        legumes=tool_input.get("legumes"),
-        leafy_greens=tool_input.get("leafy_greens"),
-        nuts_seeds=tool_input.get("nuts_seeds"),
-        source_note=tool_input.get("source_note"),
-    )
-    record = await nutrition_service.upsert_day(db, profile_id, day, data)
-    return {
+    targets = await nutrition_service.list_targets(db, profile_id)
+    by_name = {t.name.lower(): t for t in targets}
+
+    note = tool_input.get("source_note")
+    logged, unknown = [], []
+    for name in tool_input.get("targets_hit", []):
+        target = by_name.get(name.strip().lower())
+        if target:
+            await nutrition_service.set_check(
+                db, profile_id, target.id, day, True, note
+            )
+            logged.append(target.name)
+        else:
+            unknown.append(name)
+
+    result = {
         "status": "saved",
         "type": "nutrition_logged",
-        "date": record.date.isoformat(),
-        "legumes": record.legumes,
-        "leafy_greens": record.leafy_greens,
-        "nuts_seeds": record.nuts_seeds,
+        "date": day.isoformat(),
+        "logged": logged,
     }
+    if unknown:
+        result["unknown_targets"] = unknown
+        result["valid_targets"] = [t.name for t in targets]
+    return result
 
 
 async def _handle_update_family_member(
@@ -519,3 +535,30 @@ async def _handle_update_family_member(
         "member_id": str(member.id),
         "name": member.name,
     }
+
+
+async def _handle_web_search(tool_input: dict, **kwargs) -> dict:
+    from app.services import search_service
+
+    try:
+        results = await search_service.web_search(
+            tool_input["query"], count=tool_input.get("count", 5)
+        )
+    except search_service.SearchNotConfigured as e:
+        return {"error": str(e)}
+    except Exception as e:
+        return {"error": f"Search failed: {e}"}
+
+    if not results:
+        return {"results": [], "message": "No results found."}
+    return {"results": results}
+
+
+async def _handle_fetch_page(tool_input: dict, **kwargs) -> dict:
+    from app.services import search_service
+
+    try:
+        content = await search_service.fetch_page(tool_input["url"])
+    except Exception as e:
+        return {"error": f"Could not fetch page: {e}"}
+    return {"url": tool_input["url"], "content": content}

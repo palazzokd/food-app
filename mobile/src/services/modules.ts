@@ -4,7 +4,7 @@ import type {
   GroceryItem,
   GroceryList,
   MealPlan,
-  NutritionDay,
+  NutritionTarget,
   NutritionWeek,
   RecipeDetail,
   RecipeSummary,
@@ -84,15 +84,46 @@ export async function fetchNutritionWeek(start?: string): Promise<NutritionWeek>
   return res.json();
 }
 
-export async function updateNutritionDay(
+export async function toggleNutritionCheck(
+  targetId: string,
   date: string,
-  data: Partial<Pick<NutritionDay, 'legumes' | 'leafy_greens' | 'nuts_seeds' | 'source_note'>>
-): Promise<NutritionDay> {
-  const res = await apiFetch(`/api/nutrition/${date}`, {
+  hit: boolean,
+  note?: string
+): Promise<void> {
+  await apiFetch('/api/nutrition/check', {
     method: 'PUT',
+    body: JSON.stringify({ target_id: targetId, date, hit, note }),
+  });
+}
+
+export interface TargetPayload {
+  name: string;
+  emoji: string | null;
+  description: string | null;
+  examples: string | null;
+}
+
+export async function createNutritionTarget(data: TargetPayload): Promise<NutritionTarget> {
+  const res = await apiFetch('/api/nutrition/targets', {
+    method: 'POST',
     body: JSON.stringify(data),
   });
   return res.json();
+}
+
+export async function updateNutritionTarget(
+  targetId: string,
+  data: Partial<TargetPayload>
+): Promise<NutritionTarget> {
+  const res = await apiFetch(`/api/nutrition/targets/${targetId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function deleteNutritionTarget(targetId: string): Promise<void> {
+  await apiFetch(`/api/nutrition/targets/${targetId}`, { method: 'DELETE' });
 }
 
 // --- Dashboard ---

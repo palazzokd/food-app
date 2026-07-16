@@ -13,6 +13,7 @@ import FamilyProfileScreen from '../screens/family/FamilyProfileScreen';
 import MemberEditScreen from '../screens/family/MemberEditScreen';
 import DashboardScreen from '../screens/home/DashboardScreen';
 import NutritionScreen from '../screens/home/NutritionScreen';
+import TargetEditScreen from '../screens/home/TargetEditScreen';
 import MealPlannerScreen from '../screens/meals/MealPlannerScreen';
 import GroceryListScreen from '../screens/grocery/GroceryListScreen';
 import RecipeLibraryScreen from '../screens/recipes/RecipeLibraryScreen';
@@ -51,6 +52,13 @@ function HomeNavigator() {
         name="Nutrition"
         component={NutritionScreen}
         options={{ title: 'Nutrition Tracker' }}
+      />
+      <HomeStack.Screen
+        name="TargetEdit"
+        component={TargetEditScreen}
+        options={({ route }: any) => ({
+          title: route.params?.target ? route.params.target.name : 'New Target',
+        })}
       />
       <HomeStack.Screen
         name="Family"

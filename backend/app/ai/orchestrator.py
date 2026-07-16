@@ -40,8 +40,13 @@ async def process_message(
     if is_onboarding:
         system_prompt = build_onboarding_prompt()
     else:
+        from app.services import nutrition_service
+
         learned_prefs = list(profile.learned_preferences) if profile else []
-        system_prompt = build_system_prompt(profile, learned_prefs)
+        targets = (
+            await nutrition_service.list_targets(db, profile.id) if profile else []
+        )
+        system_prompt = build_system_prompt(profile, learned_prefs, targets)
 
     # Build message history
     api_messages = build_messages_for_api(list(conversation.messages))

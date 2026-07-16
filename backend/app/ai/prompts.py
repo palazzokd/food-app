@@ -17,11 +17,15 @@ def _build_date_context() -> str:
 def build_system_prompt(
     profile: FamilyProfile | None,
     learned_preferences: list[LearnedPreference] | None = None,
+    nutrition_targets: list | None = None,
 ) -> str:
     parts = [BASE_PROMPT]
 
     if profile:
         parts.append(_build_family_context(profile))
+
+    if nutrition_targets:
+        parts.append(_build_targets_context(nutrition_targets))
 
     if learned_preferences:
         parts.append(_build_preferences_context(learned_preferences))
@@ -80,15 +84,15 @@ RECIPES:
 - Be creative and varied with recipe ideas, but precise with quantities and steps
 - When the family wants to keep a recipe, save it with save_recipe — include ingredients \
 with quantities, ordered steps, toddler/infant adaptations, night-2 refresh notes, and \
-tag which nutrition targets it hits (legumes, leafy_greens, nuts_seeds)
+tag which of the family's nutrition targets it hits (exact names from NUTRITION TARGETS)
 - Check get_recipes before inventing something new — reuse and riff on saved favorites
 
 MEAL PLANNING:
 - Before planning a week, call get_recipes (favorites first) and get_meal_plan
 - Save finished plans with save_meal_plan, linking recipe_id for saved recipes
 - Note which nutrition targets each day hits; after saving a plan, log the expected \
-targets with log_nutrition for each planned day
-- Aim for every day to hit legumes + leafy greens + nuts/seeds ("consistency beats perfection")
+targets with log_nutrition for each planned day (use the family's exact target names)
+- Aim for every day to hit all of the family's nutrition targets ("consistency beats perfection")
 
 GROCERY LISTS:
 - Build lists from the meal plan (get_meal_plan) plus household staples
@@ -96,7 +100,15 @@ GROCERY LISTS:
 (e.g. Whole Foods Tuesday deals) in deal_note; add a strategy_note with the best shopping order
 - Be exact and complete — every recipe ingredient the family doesn't already stock
 - For small changes ("add lemons"), use get_grocery_list then update_grocery_items — \
-do not regenerate the whole list"""
+do not regenerate the whole list
+
+WEB RESEARCH:
+- web_search and fetch_page are for current/external information only: seasonal produce, \
+current food-safety or allergen guidance, or when the family explicitly asks you to look \
+something up or find recipes online
+- Do NOT search for routine planning or recipes you can write yourself, and never present \
+search as a source of store prices or deals
+- When you use web results, mention the source site by name"""
 
 
 def _build_family_context(profile: FamilyProfile) -> str:
@@ -152,4 +164,13 @@ def _build_preferences_context(preferences: list[LearnedPreference]) -> str:
         for item in items:
             lines.append(f"  - {item}")
 
+    return "\n".join(lines)
+
+
+def _build_targets_context(targets: list) -> str:
+    lines = ["NUTRITION TARGETS (this family tracks these daily — use exact names in tools):"]
+    for t in targets:
+        desc = f" — {t.description}" if t.description else ""
+        examples = f" (e.g. {t.examples})" if t.examples else ""
+        lines.append(f"- {t.name}{desc}{examples}")
     return "\n".join(lines)
