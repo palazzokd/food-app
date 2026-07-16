@@ -39,6 +39,7 @@ async def handle_tool_call(
         "get_grocery_list": _handle_get_grocery_list,
         "update_grocery_items": _handle_update_grocery_items,
         "log_nutrition": _handle_log_nutrition,
+        "save_recipe_source": _handle_save_recipe_source,
         "web_search": _handle_web_search,
         "fetch_page": _handle_fetch_page,
     }
@@ -201,7 +202,8 @@ async def _handle_save_recipe(
     if not profile_id:
         return {"error": "No family profile exists yet"}
 
-    data = RecipeCreate(**{**tool_input, "source": RecipeSource.ai})
+    source = RecipeSource.web if tool_input.get("source_url") else RecipeSource.ai
+    data = RecipeCreate(**{**tool_input, "source": source})
     recipe = await recipe_service.create_recipe(db, profile_id, data)
     return {
         "status": "saved",
@@ -562,3 +564,31 @@ async def _handle_fetch_page(tool_input: dict, **kwargs) -> dict:
     except Exception as e:
         return {"error": f"Could not fetch page: {e}"}
     return {"url": tool_input["url"], "content": content}
+
+
+async def _handle_save_recipe_source(
+    tool_input: dict,
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    family_profile_id: uuid.UUID | None,
+    **kwargs,
+) -> dict:
+    from app.models.recipe import TrustedSource
+
+    profile_id = await _require_profile_id(db, user_id, family_profile_id)
+    if not profile_id:
+        return {"error": "No family profile exists yet"}
+
+    source = TrustedSource(
+        family_profile_id=profile_id,
+        name=tool_input["name"],
+        url=tool_input["url"],
+        notes=tool_input.get("notes"),
+    )
+    db.add(source)
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        return {"status": "already_saved", "name": tool_input["name"]}
+    return {"status": "saved", "name": source.name, "url": source.url}

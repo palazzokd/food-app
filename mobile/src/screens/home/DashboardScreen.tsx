@@ -107,12 +107,19 @@ export default function DashboardScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
         {dinners.length > 0 ? (
-          dinners.map((e) => (
-            <View key={e.id} style={styles.dinnerRow}>
-              <Text style={styles.dinnerDay}>{DAYS_SHORT[e.day_of_week]}</Text>
-              <Text style={styles.dinnerTitle}>{e.title}</Text>
-            </View>
-          ))
+          dinners.map((e) => {
+            const isToday = e.day_of_week === (new Date().getDay() + 6) % 7;
+            return (
+              <View key={e.id} style={[styles.dinnerRow, isToday && styles.dinnerRowToday]}>
+                <Text style={[styles.dinnerDay, isToday && styles.dinnerDayToday]}>
+                  {isToday ? 'Tonight' : DAYS_SHORT[e.day_of_week]}
+                </Text>
+                <Text style={[styles.dinnerTitle, isToday && styles.dinnerTitleToday]}>
+                  {e.title}
+                </Text>
+              </View>
+            );
+          })
         ) : (
           <Text style={styles.emptyText}>
             No plan yet — ask the AI to plan your week.
@@ -231,10 +238,23 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.divider,
   },
   dinnerDay: {
-    width: 44,
+    width: 56,
     fontSize: 12,
     fontWeight: '700',
     color: colors.warm,
+  },
+  dinnerRowToday: {
+    backgroundColor: colors.warm + '18',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    marginHorizontal: -8,
+    borderBottomWidth: 0,
+  },
+  dinnerDayToday: {
+    color: colors.amber,
+  },
+  dinnerTitleToday: {
+    fontWeight: '700',
   },
   dinnerTitle: {
     flex: 1,

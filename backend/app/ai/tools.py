@@ -220,6 +220,14 @@ TOOL_DEFINITIONS = [
                 "infant_notes": {"type": "string", "description": "Finger-food adaptation for an infant"},
                 "night2_notes": {"type": "string", "description": "How to refresh leftovers for night 2"},
                 "is_favorite": {"type": "boolean"},
+                "source_name": {
+                    "type": "string",
+                    "description": "If pulled from the web: the site name, e.g. 'Sally's Baking Addiction'",
+                },
+                "source_url": {
+                    "type": "string",
+                    "description": "If pulled from the web: the exact page URL the recipe came from",
+                },
             },
             "required": ["title", "category", "ingredients", "instructions"],
         },
@@ -431,6 +439,22 @@ TOOL_DEFINITIONS = [
                 "url": {"type": "string"},
             },
             "required": ["url"],
+        },
+    },
+    {
+        "name": "save_recipe_source",
+        "description": (
+            "Save a website to the family's trusted recipe sources. Use when the "
+            "family mentions a site or blog they like getting recipes from."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Site name, e.g. 'Half Baked Harvest'"},
+                "url": {"type": "string", "description": "Site URL, e.g. 'https://www.halfbakedharvest.com'"},
+                "notes": {"type": "string", "description": "What the family likes from this site"},
+            },
+            "required": ["name", "url"],
         },
     },
 ]

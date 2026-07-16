@@ -20,6 +20,7 @@ import MealPlannerScreen from '../screens/meals/MealPlannerScreen';
 import GroceryListScreen from '../screens/grocery/GroceryListScreen';
 import RecipeLibraryScreen from '../screens/recipes/RecipeLibraryScreen';
 import RecipeDetailScreen from '../screens/recipes/RecipeDetailScreen';
+import RecipeSourcesScreen from '../screens/recipes/RecipeSourcesScreen';
 
 const AuthStack = createNativeStackNavigator();
 const HomeStack = createNativeStackNavigator();
@@ -106,7 +107,22 @@ function RecipesNavigator() {
       <RecipesStack.Screen
         name="RecipeLibrary"
         component={RecipeLibraryScreen}
-        options={{ title: 'Recipe Library' }}
+        options={({ navigation }: any) => ({
+          title: 'Recipe Library',
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('RecipeSources')}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="globe-outline" size={21} color={colors.forest} />
+            </TouchableOpacity>
+          ),
+        })}
+      />
+      <RecipesStack.Screen
+        name="RecipeSources"
+        component={RecipeSourcesScreen}
+        options={{ title: 'Recipe Sources' }}
       />
       <RecipesStack.Screen
         name="RecipeDetail"

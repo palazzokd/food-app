@@ -110,6 +110,15 @@ def render_recipe_pdf(recipe: Recipe) -> bytes:
             pdf.body_text(_clean(notes))
             pdf.ln(2)
 
+    if recipe.source_name or recipe.source_url:
+        pdf.ln(2)
+        pdf.set_font("helvetica", "I", 9)
+        pdf.set_text_color(*GRAY)
+        attribution = f"Source: {recipe.source_name or ''}"
+        if recipe.source_url:
+            attribution += f" — {recipe.source_url}"
+        pdf.multi_cell(0, 5, _clean(attribution), new_x="LMARGIN", new_y="NEXT")
+
     return bytes(pdf.output())
 
 

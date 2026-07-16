@@ -42,11 +42,23 @@ async def process_message(
     else:
         from app.services import nutrition_service
 
+        from sqlalchemy import select
+
+        from app.models.recipe import TrustedSource
+
         learned_prefs = list(profile.learned_preferences) if profile else []
         targets = (
             await nutrition_service.list_targets(db, profile.id) if profile else []
         )
-        system_prompt = build_system_prompt(profile, learned_prefs, targets)
+        sources = []
+        if profile:
+            result = await db.execute(
+                select(TrustedSource).where(
+                    TrustedSource.family_profile_id == profile.id
+                )
+            )
+            sources = list(result.scalars().all())
+        system_prompt = build_system_prompt(profile, learned_prefs, targets, sources)
 
     # Build message history
     api_messages = build_messages_for_api(list(conversation.messages))

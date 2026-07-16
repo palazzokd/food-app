@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -135,6 +136,20 @@ export default function RecipeDetailScreen({ route }: any) {
           <Text style={styles.bodyText}>{recipe.night2_notes}</Text>
         </Card>
       ) : null}
+
+      {recipe.source_name || recipe.source_url ? (
+        <TouchableOpacity
+          style={styles.sourceRow}
+          onPress={() => recipe.source_url && Linking.openURL(recipe.source_url)}
+          disabled={!recipe.source_url}
+        >
+          <Ionicons name="globe-outline" size={14} color={colors.sage} />
+          <Text style={styles.sourceText}>
+            From {recipe.source_name || recipe.source_url}
+            {recipe.source_url ? '  ↗' : ''}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
     </ScrollView>
   );
 }
@@ -217,5 +232,17 @@ const styles = StyleSheet.create({
     color: colors.charcoal,
     lineHeight: 22,
     marginBottom: 8,
+  },
+  sourceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+  },
+  sourceText: {
+    fontSize: 13,
+    color: colors.sage,
+    fontWeight: '600',
   },
 });

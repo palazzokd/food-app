@@ -4,7 +4,7 @@ from app.models.family import FamilyProfile, HouseholdMember, MemberRole, Nutrit
 from app.models.grocery import GroceryItem, GroceryList
 from app.models.meal_plan import MealPlan, MealPlanEntry
 from app.models.nutrition import NutritionCheck, NutritionTarget
-from app.models.recipe import MealType, Recipe, RecipeSource
+from app.models.recipe import MealType, Recipe, RecipeSource, TrustedSource
 from app.models.user import User
 
 __all__ = [
@@ -20,6 +20,7 @@ __all__ = [
     "Recipe",
     "MealType",
     "RecipeSource",
+    "TrustedSource",
     "MealPlan",
     "MealPlanEntry",
     "GroceryList",

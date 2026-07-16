@@ -6,6 +6,7 @@ import type {
   MealPlan,
   NutritionTarget,
   NutritionWeek,
+  TrustedSource,
   RecipeDetail,
   RecipeSummary,
 } from '../types/api';
@@ -41,6 +42,29 @@ export async function toggleFavorite(id: string, isFavorite: boolean): Promise<R
 
 export async function deleteRecipe(id: string): Promise<void> {
   await apiFetch(`/api/recipes/${id}`, { method: 'DELETE' });
+}
+
+// --- Trusted recipe sources ---
+
+export async function fetchTrustedSources(): Promise<TrustedSource[]> {
+  const res = await apiFetch('/api/recipes/sources');
+  return res.json();
+}
+
+export async function createTrustedSource(data: {
+  name: string;
+  url: string;
+  notes: string | null;
+}): Promise<TrustedSource> {
+  const res = await apiFetch('/api/recipes/sources', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function deleteTrustedSource(sourceId: string): Promise<void> {
+  await apiFetch(`/api/recipes/sources/${sourceId}`, { method: 'DELETE' });
 }
 
 // --- Meal plans ---
@@ -131,4 +155,13 @@ export async function deleteNutritionTarget(targetId: string): Promise<void> {
 export async function fetchDashboard(): Promise<Dashboard> {
   const res = await apiFetch('/api/dashboard');
   return res.json();
+}
+
+export async function fetchMealPlanByWeek(weekStart: string): Promise<MealPlan | null> {
+  try {
+    const res = await apiFetch(`/api/meal-plans/week/${weekStart}`);
+    return res.json();
+  } catch {
+    return null;
+  }
 }

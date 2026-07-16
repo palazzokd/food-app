@@ -1,7 +1,7 @@
 import enum
 import uuid
 
-from sqlalchemy import ARRAY, Boolean, ForeignKey, Integer, String, Text
+from sqlalchemy import ARRAY, Boolean, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -18,6 +18,7 @@ class MealType(str, enum.Enum):
 class RecipeSource(str, enum.Enum):
     ai = "ai"
     manual = "manual"
+    web = "web"
 
 
 class Recipe(Base, TimestampMixin):
@@ -43,3 +44,20 @@ class Recipe(Base, TimestampMixin):
     infant_notes: Mapped[str | None] = mapped_column(Text)
     night2_notes: Mapped[str | None] = mapped_column(Text)
     source: Mapped[RecipeSource] = mapped_column(default=RecipeSource.ai)
+    source_name: Mapped[str | None] = mapped_column(String(100))
+    source_url: Mapped[str | None] = mapped_column(String(500))
+
+
+class TrustedSource(Base, TimestampMixin):
+    """A website the family likes getting recipes from."""
+
+    __tablename__ = "trusted_sources"
+    __table_args__ = (UniqueConstraint("family_profile_id", "url"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=generate_uuid)
+    family_profile_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("family_profiles.id", ondelete="CASCADE"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    url: Mapped[str] = mapped_column(String(500), nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text)

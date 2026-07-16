@@ -29,6 +29,8 @@ class RecipeCreate(BaseModel):
     infant_notes: str | None = None
     night2_notes: str | None = None
     source: RecipeSource = RecipeSource.manual
+    source_name: str | None = None
+    source_url: str | None = None
 
 
 class RecipeUpdate(BaseModel):
@@ -67,6 +69,8 @@ class RecipeResponse(BaseModel):
     infant_notes: str | None
     night2_notes: str | None
     source: RecipeSource
+    source_name: str | None
+    source_url: str | None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -84,5 +88,26 @@ class RecipeSummary(BaseModel):
     is_favorite: bool
     nutrition_tags: list[str]
     created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class TrustedSourceCreate(BaseModel):
+    name: str
+    url: str
+    notes: str | None = None
+
+
+class TrustedSourceUpdate(BaseModel):
+    name: str | None = None
+    url: str | None = None
+    notes: str | None = None
+
+
+class TrustedSourceResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    url: str
+    notes: str | None
 
     model_config = {"from_attributes": True}

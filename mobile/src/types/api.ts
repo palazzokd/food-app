@@ -71,7 +71,16 @@ export interface RecipeDetail extends RecipeSummary {
   toddler_notes: string | null;
   infant_notes: string | null;
   night2_notes: string | null;
-  source: 'ai' | 'manual';
+  source: 'ai' | 'manual' | 'web';
+  source_name: string | null;
+  source_url: string | null;
+}
+
+export interface TrustedSource {
+  id: string;
+  name: string;
+  url: string;
+  notes: string | null;
 }
 
 export interface MealPlanEntry {

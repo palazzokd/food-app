@@ -106,3 +106,25 @@ async def reset_password_with_code(email: str, code: str, new_password: str) -> 
     supabase.auth.admin.update_user_by_id(
         response.user.id, {"password": new_password}
     )
+
+
+async def refresh_session(db: AsyncSession, refresh_token: str) -> dict:
+    """Exchange a refresh token for a new access/refresh token pair."""
+    supabase = get_supabase_client()
+    try:
+        response = supabase.auth.refresh_session(refresh_token)
+    except Exception:
+        raise ValueError("Invalid or expired refresh token")
+
+    if not response.session or not response.user:
+        raise ValueError("Invalid or expired refresh token")
+
+    user = await get_user_by_supabase_id(db, uuid.UUID(response.user.id))
+    if not user:
+        raise ValueError("User not found")
+
+    return {
+        "access_token": response.session.access_token,
+        "refresh_token": response.session.refresh_token,
+        "user": user,
+    }

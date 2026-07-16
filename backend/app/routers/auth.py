@@ -8,6 +8,7 @@ from app.schemas.auth import (
     AuthResponse,
     ForgotPasswordRequest,
     LoginRequest,
+    RefreshRequest,
     RegisterRequest,
     ResetPasswordRequest,
     UserResponse,
@@ -73,3 +74,16 @@ async def reset_password(request: ResetPasswordRequest):
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/refresh", response_model=AuthResponse)
+async def refresh(request: RefreshRequest, db: AsyncSession = Depends(get_db)):
+    try:
+        result = await auth_service.refresh_session(db, request.refresh_token)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    return AuthResponse(
+        access_token=result["access_token"],
+        refresh_token=result["refresh_token"],
+        user=UserResponse.model_validate(result["user"]),
+    )

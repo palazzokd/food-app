@@ -18,6 +18,7 @@ def build_system_prompt(
     profile: FamilyProfile | None,
     learned_preferences: list[LearnedPreference] | None = None,
     nutrition_targets: list | None = None,
+    trusted_sources: list | None = None,
 ) -> str:
     parts = [BASE_PROMPT]
 
@@ -26,6 +27,9 @@ def build_system_prompt(
 
     if nutrition_targets:
         parts.append(_build_targets_context(nutrition_targets))
+
+    if trusted_sources:
+        parts.append(_build_trusted_sources_context(trusted_sources))
 
     if learned_preferences:
         parts.append(_build_preferences_context(learned_preferences))
@@ -106,6 +110,13 @@ WEB RESEARCH:
 - web_search and fetch_page are for current/external information only: seasonal produce, \
 current food-safety or allergen guidance, or when the family explicitly asks you to look \
 something up or find recipes online
+- When looking for recipes online and the family has TRUSTED RECIPE SOURCES, search those \
+sites first using site: queries (e.g. "site:halfbakedharvest.com chicken tacos"); fall back \
+to the open web only if they don't have what you need
+- When you pull a recipe from a web page: fetch_page it, stay faithful to the original \
+ingredients, quantities, and method (adjust only for the family's constraints), write the \
+family adaptations yourself, and ALWAYS pass source_name and source_url to save_recipe
+- If the family mentions a site they love, save it with save_recipe_source
 - Do NOT search for routine planning or recipes you can write yourself, and never present \
 search as a source of store prices or deals
 - When you use web results, mention the source site by name"""
@@ -173,4 +184,12 @@ def _build_targets_context(targets: list) -> str:
         desc = f" — {t.description}" if t.description else ""
         examples = f" (e.g. {t.examples})" if t.examples else ""
         lines.append(f"- {t.name}{desc}{examples}")
+    return "\n".join(lines)
+
+
+def _build_trusted_sources_context(sources: list) -> str:
+    lines = ["TRUSTED RECIPE SOURCES (family favorites — prefer these when searching for recipes online):"]
+    for s in sources:
+        notes = f" — {s.notes}" if s.notes else ""
+        lines.append(f"- {s.name}: {s.url}{notes}")
     return "\n".join(lines)
