@@ -22,7 +22,7 @@ import type { FamilyProfileResponse } from '../../types/api';
 export default function FamilyProfileScreen({ navigation }: any) {
   const [profile, setProfile] = useState<FamilyProfileResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
 
   const loadProfile = async () => {
     setLoading(true);
@@ -99,9 +99,14 @@ export default function FamilyProfileScreen({ navigation }: any) {
         </Card>
       ) : null}
 
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-        <Text style={styles.logoutText}>Log Out</Text>
-      </TouchableOpacity>
+      <Card>
+        <CardTitle>Account</CardTitle>
+        <Text style={styles.accountEmail}>{user?.email}</Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <Ionicons name="log-out-outline" size={16} color={colors.error} />
+          <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
+      </Card>
     </ScrollView>
   );
 }
@@ -185,12 +190,20 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontStyle: 'italic',
   },
+  accountEmail: {
+    fontSize: 14,
+    color: colors.charcoal,
+    marginBottom: 12,
+  },
   logoutButton: {
-    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    padding: 12,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.error,
-    alignItems: 'center',
   },
   logoutText: {
     color: colors.error,

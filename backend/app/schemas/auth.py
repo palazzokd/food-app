@@ -30,3 +30,13 @@ class UserResponse(BaseModel):
     trial_ends_at: datetime | None = None
 
     model_config = {"from_attributes": True}
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    code: str
+    new_password: str

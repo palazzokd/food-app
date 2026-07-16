@@ -82,3 +82,27 @@ async def verify_token(token: str) -> dict:
     if not user_response.user:
         raise ValueError("Invalid token")
     return {"supabase_auth_id": uuid.UUID(user_response.user.id)}
+
+
+async def send_password_reset(email: str) -> None:
+    """Ask Supabase to email a 6-digit recovery code to this address."""
+    supabase = get_supabase_client()
+    supabase.auth.reset_password_for_email(email)
+
+
+async def reset_password_with_code(email: str, code: str, new_password: str) -> None:
+    """Verify the emailed recovery code and set a new password."""
+    supabase = get_supabase_client()
+    try:
+        response = supabase.auth.verify_otp(
+            {"email": email, "token": code, "type": "recovery"}
+        )
+    except Exception:
+        raise ValueError("Invalid or expired code")
+
+    if not response.user:
+        raise ValueError("Invalid or expired code")
+
+    supabase.auth.admin.update_user_by_id(
+        response.user.id, {"password": new_password}
+    )

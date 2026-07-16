@@ -1,4 +1,5 @@
 import React from 'react';
+import { Alert, TouchableOpacity } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +9,7 @@ import { useAuthStore } from '../store/authStore';
 
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
+import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ChatScreen from '../screens/chat/ChatScreen';
 import FamilyProfileScreen from '../screens/family/FamilyProfileScreen';
 import MemberEditScreen from '../screens/family/MemberEditScreen';
@@ -36,7 +38,29 @@ function AuthNavigator() {
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Register" component={RegisterScreen} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </AuthStack.Navigator>
+  );
+}
+
+function LogoutButton() {
+  const confirmLogout = () => {
+    Alert.alert('Log out', 'Log out of FamilyPlate?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Log Out',
+        style: 'destructive',
+        onPress: () => useAuthStore.getState().logout(),
+      },
+    ]);
+  };
+  return (
+    <TouchableOpacity
+      onPress={confirmLogout}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+    >
+      <Ionicons name="log-out-outline" size={22} color={colors.forest} />
+    </TouchableOpacity>
   );
 }
 
@@ -46,7 +70,7 @@ function HomeNavigator() {
       <HomeStack.Screen
         name="Dashboard"
         component={DashboardScreen}
-        options={{ title: 'FamilyPlate' }}
+        options={{ title: 'FamilyPlate', headerRight: () => <LogoutButton /> }}
       />
       <HomeStack.Screen
         name="Nutrition"
